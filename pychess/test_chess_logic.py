@@ -1,7 +1,7 @@
 import unittest
 
 
-class Cases(unittest.TestCase):
+class TestCases(unittest.TestCase):
     def test_something(self):
         self.assertEqual(True, True)  # add assertion here
 
