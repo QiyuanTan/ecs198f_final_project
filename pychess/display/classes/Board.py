@@ -60,7 +60,7 @@ class Board:
     def handle_click(self, mx: int, my: int):
         """
         Pygame Event Handler for when user clicks the board. 
-        
+            
         Calls the ChessLogic play_move function if a move has been parsed
 
         Args:

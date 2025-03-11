@@ -45,4 +45,6 @@ class ChessLogic:
         """
         
         #Implement this
+        
+        
         pass
