@@ -1,3 +1,5 @@
+from special_moves import Castling, EnPassant, Promotion
+
 class ChessLogic:
 	def __init__(self):
 		"""
@@ -54,43 +56,45 @@ class ChessLogic:
 			return ""
 
 		# handle special moves
-		if self._is_castling(move):
-			return self._handle_castling(move)
-		elif self._is_en_passant(move):
-			return self._handle_en_passant(move)
-		elif self._is_promotion(move):
-			return self._handle_promotion(move)
+		if Castling.applies(self.board, move):
+			return Castling.handle(self.board, move)
+		elif EnPassant.applies(self.board, move):
+			return EnPassant.handle(self.board, move)
+		elif Promotion.applies(self.board, move):
+			return Promotion.handle(self.board, move)
+		
+		# handle normal moves
+		if self._invalid_move():
+			return ""
+		if ending_piece != "":
+			self._handle_capture()
 
-		return ""
-
+		# move the piece
+		return self._handle_move(starting, ending)
 
 	def _get_piece(self, square:str) -> str:
-			"""
-			@brief: Function to get the piece at the given move
-			@param square: The square to get the piece from, e.g. e4
-			@return: The piece at the square
-			"""
-			col = ord(square[0]) - ord('a')
-			row = 8 - int(square[1])
-			return self.board[row][col]
+		"""
+		@brief: Function to get the piece at the given move
+		@param square: The square to get the piece from, e.g. e4
+		@return: The piece at the square
+		"""
+		col = ord(square[0]) - ord('a')
+		row = 8 - int(square[1])
+		return self.board[row][col]
 
 	def _invalid_starting_piece(self, starting_piece):
+		"""
+		@brief: Function to check if the starting piece is invalid
+		@param starting_piece: The piece at the starting square
+		@return: True if the starting piece is invalid, False otherwise
+		"""
 		return starting_piece == '' or (self.move == 'w' and starting_piece.islower()) or (self.move == 'b' and starting_piece.isupper())
 
-	def _is_castling(self, move):
+	def _handle_capture(self):
 		raise NotImplementedError
 
-	def _handle_castling(self, move):
+	def _invalid_move(self):
 		raise NotImplementedError
 
-	def _is_en_passant(self, move):
-		raise NotImplementedError
-
-	def _handle_en_passant(self, move):
-		raise NotImplementedError
-
-	def _is_promotion(self, move):
-		raise NotImplementedError
-
-	def _handle_promotion(self, move):
+	def _handle_move(self, starting, ending):
 		raise NotImplementedError
