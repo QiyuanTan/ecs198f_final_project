@@ -1,5 +1,4 @@
-from special_moves import Castling, EnPassant, Promotion
-
+from .special_moves import Castling, EnPassant, Promotion
 class ChessLogic:
 	def __init__(self):
 		"""
@@ -32,7 +31,12 @@ class ChessLogic:
 			['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
 		]
 		self.result = ""
-		self.move = "w"
+		self.move = 'w'
+		self.castling = Castling()
+		self.en_passant = EnPassant()
+		self.promotion = Promotion()
+		self.white_king_moved = False
+		self.black_king_moved = False
 
 	def play_move(self, move: str) -> str:
 		"""
@@ -53,16 +57,17 @@ class ChessLogic:
 
 		# skip if the starting piece is invalid
 		if self._invalid_starting_piece(starting_piece):
+			print("Invalid starting square")
 			return ""
 
 		# handle special moves
-		if Castling.applies(self.board, move):
-			return Castling.handle(self.board, move)
-		elif EnPassant.applies(self.board, move):
-			return EnPassant.handle(self.board, move)
-		elif Promotion.applies(self.board, move):
-			return Promotion.handle(self.board, move)
-		
+		if self.castling.applies(self.board, move):
+			return self.castling.handle(self.board, move)
+		elif self.en_passant.applies(self.board, move):
+			return self.en_passant.handle(self.board, move)
+		elif self.promotion.applies(self.board, move):
+			return self.promotion.handle(self.board, move)
+
 		# handle normal moves
 		if self._invalid_move():
 			return ""
@@ -70,7 +75,15 @@ class ChessLogic:
 			self._handle_capture()
 
 		# move the piece
-		return self._handle_move(starting, ending)
+		result =  self._handle_move(starting, ending)
+
+		# determine if the game is over
+
+		# switch the move
+		self.move = 'w' if self.move == 'b' else 'b'
+
+		print(result)
+		return result
 
 	def _get_piece(self, square:str) -> str:
 		"""

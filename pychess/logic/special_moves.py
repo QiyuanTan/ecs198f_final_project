@@ -1,35 +1,31 @@
 class MoveHandler:
-    @staticmethod
-    def applies(board, move):
-        raise NotImplementedError
+    def applies(self, board, move):
+        raise  NotImplementedError
 
-    @staticmethod
-    def handle(board, move):
+    def handle(self, board, move):
         raise NotImplementedError
 
 class Castling(MoveHandler):
-    @staticmethod
-    def applies(board, move):
+    def __init__(self):
+        self.white_king_moved = False
+        self.black_king_moved = False
+
+    def applies(self, board, move):
         raise NotImplementedError
 
-    @staticmethod
-    def handle(board, move):
+    def handle(self, board, move):
         raise NotImplementedError
 
 class EnPassant(MoveHandler):
-    @staticmethod
-    def applies(board, move):
+    def applies(self, board, move):
         raise NotImplementedError
 
-    @staticmethod
-    def handle(board, move):
+    def handle(self, board, move):
         raise NotImplementedError
 
 class Promotion(MoveHandler):
-    @staticmethod
-    def applies(board, move):
+    def applies(self, board, move):
         raise NotImplementedError
 
-    @staticmethod
-    def handle(board, move):
+    def handle(self, board, move):
         raise NotImplementedError
