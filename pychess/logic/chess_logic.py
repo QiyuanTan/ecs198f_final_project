@@ -65,8 +65,6 @@ class ChessLogic:
 			return self.castling.handle(self.board, move)
 		elif self.en_passant.applies(self.board, move):
 			return self.en_passant.handle(self.board, move)
-		elif self.promotion.applies(self.board, move):
-			return self.promotion.handle(self.board, move)
 
 		# handle normal moves
 		if self._invalid_move():
@@ -76,6 +74,9 @@ class ChessLogic:
 
 		# move the piece
 		result =  self._handle_move(starting, ending)
+
+		if self.promotion.applies(self.board, move):
+			return self.promotion.handle(self.board, move)
 
 		# determine if the game is over
 
