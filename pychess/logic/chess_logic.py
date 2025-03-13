@@ -84,7 +84,7 @@ class ChessLogic:
 			return ""
 
 		# switch the move
-		self.move = 'w' if self.move == 'b' else 'b'
+		self.turn = 'w' if self.turn == 'b' else 'b'
 
 		print(result)
 		return result
@@ -101,7 +101,7 @@ class ChessLogic:
 	def _invalid_move(self, move) -> bool:
 		#check if destination is valid
 		#get the piece
-		cur_piece:str = self._get_piece(move[:2])
+		cur_piece:str = get_piece(self.board, move[:2])
 		#check if destination is in its path, if not return false
 		#check if pieces blocking it, if not return false
 		#check if causing a check, if so then return false
