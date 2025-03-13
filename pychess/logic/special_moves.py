@@ -1,3 +1,5 @@
+from .board_utils import *
+
 class MoveHandler:
     def applies(self, board, move):
         raise  NotImplementedError
@@ -11,7 +13,15 @@ class Castling(MoveHandler):
         self.black_king_moved = False
 
     def applies(self, board, move):
-        raise NotImplementedError
+        # check if the king has moved
+        if self.white_king_moved and get_piece(board, move[:2]).isupper():
+            return False
+        if self.black_king_moved and get_piece(board, move[:2]).islower():
+            return False
+
+        # check if the move is a castling move
+        if move == 'e1g1' or move == 'e1c1':
+            return True
 
     def handle(self, board, move):
         raise NotImplementedError

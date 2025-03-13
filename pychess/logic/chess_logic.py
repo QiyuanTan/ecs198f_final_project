@@ -1,4 +1,5 @@
 from .special_moves import Castling, EnPassant, Promotion
+from .board_utils import *
 class ChessLogic:
 	def __init__(self):
 		"""
@@ -52,8 +53,8 @@ class ChessLogic:
 		"""
 		starting = move[:2]
 		ending = move[2:]
-		starting_piece = self._get_piece(starting)
-		ending_piece = self._get_piece(ending)
+		starting_piece = get_piece(self.board, starting)
+		ending_piece = get_piece(self.board, ending)
 
 		# skip if the starting piece is invalid
 		if self._invalid_starting_piece(starting_piece):
@@ -69,8 +70,6 @@ class ChessLogic:
 		# handle normal moves
 		if self._invalid_move():
 			return ""
-		if ending_piece != "":
-			self._handle_capture()
 
 		# move the piece
 		result =  self._handle_move(starting, ending)
@@ -79,22 +78,14 @@ class ChessLogic:
 			return self.promotion.handle(self.board, move)
 
 		# determine if the game is over
+		if self._game_over():
+			return ""
 
 		# switch the move
 		self.move = 'w' if self.move == 'b' else 'b'
 
 		print(result)
 		return result
-
-	def _get_piece(self, square:str) -> str:
-		"""
-		@brief: Function to get the piece at the given move
-		@param square: The square to get the piece from, e.g. e4
-		@return: The piece at the square
-		"""
-		col = ord(square[0]) - ord('a')
-		row = 8 - int(square[1])
-		return self.board[row][col]
 
 	def _invalid_starting_piece(self, starting_piece):
 		"""
@@ -112,3 +103,6 @@ class ChessLogic:
 
 	def _handle_move(self, starting, ending):
 		raise NotImplementedError
+
+	def _game_over(self):
+		pass

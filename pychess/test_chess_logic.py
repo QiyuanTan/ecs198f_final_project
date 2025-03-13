@@ -55,7 +55,6 @@ from logic.chess_logic import ChessLogic
             False
     )
 ])
-
 def test_is_castling(board, move, king_moved, expected):
     logic = ChessLogic()
     logic.board = board
