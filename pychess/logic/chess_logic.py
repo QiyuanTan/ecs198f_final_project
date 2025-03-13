@@ -32,12 +32,14 @@ class ChessLogic:
 			['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
 		]
 		self.result = ""
-		self.move = 'w'
+		self.turn = 'w'
 		self.castling = Castling()
 		self.en_passant = EnPassant()
 		self.promotion = Promotion()
 		self.white_king_moved = False
 		self.black_king_moved = False
+		self. white_king_index = (7,4)
+		self. black_king_index = (0,4)
 
 	def play_move(self, move: str) -> str:
 		"""
@@ -95,14 +97,27 @@ class ChessLogic:
 		"""
 		return starting_piece == '' or (self.move == 'w' and starting_piece.islower()) or (self.move == 'b' and starting_piece.isupper())
 
-	def _handle_capture(self):
-		raise NotImplementedError
 
-	def _invalid_move(self):
-		raise NotImplementedError
+	def _invalid_move(self, move) -> bool:
+		#check if destination is valid
+		#get the piece
+		cur_piece:str = self._get_piece(move[:2])
+		#check if destination is in its path, if not return false
+		#check if pieces blocking it, if not return false
+		#check if causing a check, if so then return false
+		#else return true
+		pass
 
 	def _handle_move(self, starting, ending):
 		raise NotImplementedError
+
+	def check_king_path_for_check(self, board) -> bool:
+		"""
+		check horizontal/vertical path from king(opposing queen/rook)
+		check diagonal path from king (opposing queen/bishop)
+		check knight path from king
+		"""
+		pass
 
 	def _game_over(self):
 		pass
