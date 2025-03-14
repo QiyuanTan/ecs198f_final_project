@@ -79,3 +79,21 @@ def test_checkmate():
     logic.board[7][3] = 'K'  # White king
     logic.board[6][3] = ''  # Clear escape path for king
     assert logic.play_move("d1d2") == "Checkmate"
+
+@pytest.mark.parametrize("piece, turn, expected", [
+    ('r', 'w', True),
+    ('r', 'b', False),
+    ('R', 'w', False),
+    ('R', 'b', True),
+    ('p', 'w', True),
+    ('p', 'b', False),
+    ('P', 'w', False),
+    ('P', 'b', True),
+    ('', 'w', True),
+    ('', 'b', True),
+])
+def test_invalid_starting_piece(piece, turn, expected):
+    from logic.chess_logic import ChessLogic
+    logic = ChessLogic()
+    logic.turn = turn
+    assert logic._invalid_starting_piece(piece) == expected

@@ -79,7 +79,20 @@ def is_vertical_move(start, end):
     return start_row != end_row and start_col == end_col
 
 def is_diagonal_move(start, end):
-    raise NotImplementedError
+    """
+    Function to determine if the move is diagonal
+    Args:
+        start: string or tuple of the starting square.
+        end: string or tuple of the ending square.
+    Format of input:
+        start: 'e2' or (6, 4)
+        end: 'e4' or (4, 4)
+    Returns:
+
+    """
+    start_row, start_col = str2index(start)
+    end_row, end_col = str2index(end)
+    return abs(start_row - end_row) == abs(start_col - end_col)
 
 def empty_between_horizontal(board, start, end):
     """
@@ -97,7 +110,7 @@ def empty_between_horizontal(board, start, end):
     start_row, start_col = str2index(start)
     end_row, end_col = str2index(end)
 
-    if start_row != end_row:
+    if not is_horizontal_move(start, end):
         raise ValueError("Start and end square must be on the same row for horizontal move")
 
     for col in range(min(start_col, end_col) + 1, max(start_col, end_col)):
@@ -107,7 +120,57 @@ def empty_between_horizontal(board, start, end):
     return True
 
 def empty_between_vertical(board, start, end):
-    raise NotImplementedError
+    """
+    Function to determine if there are any pieces between the start and end square vertically, exclusive
+    Args:
+        board: 2D list representing the chess board
+        start: string or tuple of the starting square.
+        end: string or tuple of the ending square.
+    Format of input:
+        start: 'e2' or (6, 4)
+        end: 'e4' or (4, 4)
+    Returns:
+        bool: True if there are no pieces between the start and end square. False otherwise.
+    """
+    start_row, start_col = str2index(start)
+    end_row, end_col = str2index(end)
+
+    if not is_vertical_move(start, end):
+        raise ValueError("Start and end square must be on the same column for vertical move")
+
+    for row in range(min(start_row, end_row) + 1, max(start_row, end_row)):
+            if board[row][start_col] != '':
+                return False
+
+    return True
 
 def empty_between_diagonal(board, start, end):
-    raise NotImplementedError
+    """
+    Function to determine if there are any pieces between the start and end square diagonally, exclusive
+    Args:
+        board: 2D list representing the chess board
+        start: string or tuple of the starting square.
+        end: string or tuple of the ending square.
+    Format of input:
+        start: 'e2' or (6, 4)
+        end: 'e4' or (4, 4)
+    Returns:
+        bool: True if there are no pieces between the start and end square. False otherwise.
+    """
+    start_row, start_col = str2index(start)
+    end_row, end_col = str2index(end)
+
+    if not is_diagonal_move(start, end):
+        raise ValueError("Start and end square must be on the same diagonal for diagonal move")
+
+    start_row, end_row = min(start_row, end_row), max(start_row, end_row)
+    start_col, end_col = min(start_col, end_col), max(start_col, end_col)
+
+    row, col = start_row + 1, start_col + 1
+    while row < end_row and col < end_col:
+        if board[row][col] != '':
+            return False
+        row += 1
+        col += 1
+
+    return True
