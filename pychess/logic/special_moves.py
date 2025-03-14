@@ -68,21 +68,45 @@ class Castling(MoveHandler):
 
 
 class EnPassant(MoveHandler):
+    def __init__(self):
+        self.last_move = None  # Track last move to verify En Passant condition
+
     def applies(self, board, move):
         start, end = move[:2], move[2:]
         start_col, start_row = ord(start[0]) - ord('a'), 8 - int(start[1])
         end_col, end_row = ord(end[0]) - ord('a'), 8 - int(end[1])
         piece = board[start_row][start_col]
-        return piece.lower() == "p" and abs(start_col - end_col) == 1 and board[start_row][end_col].lower() == "p"
+
+        # Ensure it's a pawn moving diagonally
+        if piece.lower() != "p" or abs(start_col - end_col) != 1:
+            return False
+
+        # Check if opponent's pawn just moved two squares forward
+        if self.last_move:
+            last_start, last_end = self.last_move[:2], self.last_move[2:]
+            last_start_col, last_start_row = ord(last_start[0]) - ord('a'), 8 - int(last_start[1])
+            last_end_col, last_end_row = ord(last_end[0]) - ord('a'), 8 - int(last_end[1])
+
+            if last_end_col == end_col and abs(last_end_row - last_start_row) == 2:
+                return True
+
+        return False
 
     def handle(self, board, move):
         start, end = move[:2], move[2:]
         start_col, start_row = ord(start[0]) - ord('a'), 8 - int(start[1])
         end_col, end_row = ord(end[0]) - ord('a'), 8 - int(end[1])
+
+        # Remove opponent's captured pawn
+        captured_pawn_row = start_row
+        board[captured_pawn_row][end_col] = ""
+
+        # Move current pawn
         board[start_row][start_col] = ""
-        board[start_row][end_col] = ""
         board[end_row][end_col] = "P" if start_row == 3 else "p"
+
         return f"{start}x{end}"
+
 
 class Promotion(MoveHandler):
     def applies(self, board, move):
