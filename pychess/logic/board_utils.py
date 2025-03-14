@@ -96,7 +96,8 @@ def is_diagonal_move(start, end):
 
 def empty_between_horizontal(board, start, end):
     """
-    Function to determine if there are any pieces between the start and end square horizontally, exclusive
+    Function to determine if there are any pieces between the start and end square horizontally,
+    including the ending square
     Args:
         board: 2D list representing the chess board
         start: string or tuple of the starting square.
@@ -105,7 +106,8 @@ def empty_between_horizontal(board, start, end):
         start: 'e2' or (6, 4)
         end: 'e4' or (4, 4)
     Returns:
-        bool: True if there are no pieces between the start and end square. False otherwise.
+        bool: True if there are no pieces between the start and end square.
+        False otherwise.
     """
     start_row, start_col = str2index(start)
     end_row, end_col = str2index(end)
@@ -113,15 +115,17 @@ def empty_between_horizontal(board, start, end):
     if not is_horizontal_move(start, end):
         raise ValueError("Start and end square must be on the same row for horizontal move")
 
-    for col in range(min(start_col, end_col) + 1, max(start_col, end_col)):
-            if board[start_row][col] != '':
-                return False
+    delta = 1 if start_col < end_col else -1
+    for col in range(start_col + delta, end_col, delta):
+        if board[start_row][col] != '':
+            return False
 
     return True
 
 def empty_between_vertical(board, start, end):
     """
-    Function to determine if there are any pieces between the start and end square vertically, exclusive
+    Function to determine if there are any pieces between the start and end square vertically,
+    including the ending square
     Args:
         board: 2D list representing the chess board
         start: string or tuple of the starting square.
@@ -130,7 +134,8 @@ def empty_between_vertical(board, start, end):
         start: 'e2' or (6, 4)
         end: 'e4' or (4, 4)
     Returns:
-        bool: True if there are no pieces between the start and end square. False otherwise.
+        bool: True if there are no pieces between the start and end square.
+        False otherwise.
     """
     start_row, start_col = str2index(start)
     end_row, end_col = str2index(end)
@@ -138,15 +143,18 @@ def empty_between_vertical(board, start, end):
     if not is_vertical_move(start, end):
         raise ValueError("Start and end square must be on the same column for vertical move")
 
-    for row in range(min(start_row, end_row) + 1, max(start_row, end_row)):
-            if board[row][start_col] != '':
-                return False
+    delta = 1 if start_row < end_row else -1
+    for row in range(start_row + delta, end_row, delta):
+        if board[row][start_col] != '':
+            return False
 
     return True
 
+
 def empty_between_diagonal(board, start, end):
     """
-    Function to determine if there are any pieces between the start and end square diagonally, exclusive
+    Function to determine if there are any pieces between the start and end square diagonally,
+    including the ending square
     Args:
         board: 2D list representing the chess board
         start: string or tuple of the starting square.
@@ -155,7 +163,8 @@ def empty_between_diagonal(board, start, end):
         start: 'e2' or (6, 4)
         end: 'e4' or (4, 4)
     Returns:
-        bool: True if there are no pieces between the start and end square. False otherwise.
+        bool: True if there are no pieces between the start and end square.
+        False otherwise.
     """
     start_row, start_col = str2index(start)
     end_row, end_col = str2index(end)
@@ -163,14 +172,14 @@ def empty_between_diagonal(board, start, end):
     if not is_diagonal_move(start, end):
         raise ValueError("Start and end square must be on the same diagonal for diagonal move")
 
-    start_row, end_row = min(start_row, end_row), max(start_row, end_row)
-    start_col, end_col = min(start_col, end_col), max(start_col, end_col)
+    row_delta = 1 if start_row < end_row else -1
+    col_delta = 1 if start_col < end_col else -1
 
-    row, col = start_row + 1, start_col + 1
-    while row < end_row and col < end_col:
+    row, col = start_row + row_delta, start_col + col_delta
+    while row <= end_row and row_delta == 1 or row >= end_row and row_delta == -1:
         if board[row][col] != '':
             return False
-        row += 1
-        col += 1
+        row += row_delta
+        col += col_delta
 
     return True

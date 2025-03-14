@@ -1,5 +1,5 @@
-from .special_moves import Castling, EnPassant, Promotion
-from .board_utils import *
+from pychess.logic.special_moves import Castling, EnPassant, Promotion
+from pychess.logic.board_utils import *
 class ChessLogic:
 	def __init__(self):
 		"""
