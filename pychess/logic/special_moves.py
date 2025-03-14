@@ -19,9 +19,31 @@ class Castling(MoveHandler):
         if self.black_king_moved and get_piece(board, move[:2]).islower():
             return False
 
-        # check if the move is a castling move
-        if move == 'e1g1' or move == 'e1c1':
-            return True
+        # check if the path is clear
+        if move == "e1g1" or move == "e1h1":
+            # check for the king side white
+            if not empty_between_horizontal(board, "e1", "g1"):
+                return False
+        elif move == "e1c1" or move == "e1a1":
+            # check for the queen side white
+            if not empty_between_horizontal(board, "e1", "b1"):
+                return False
+        elif move == "e8g8" or move == "e8h8":
+            # check for the king side black
+            if not empty_between_horizontal(board, "e8", "g8"):
+                return False
+        elif move == "e8c8" or move == "e8a8":
+            # check for the queen side black
+            if not empty_between_horizontal(board, "e8", "b8"):
+                return False
+        else:
+            # not a valid castling move
+            return False
+
+        # check if the move is causing a check
+        # TODO: implement this
+
+        return True
 
     def handle(self, board, move):
         raise NotImplementedError
