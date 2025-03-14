@@ -28,6 +28,24 @@ def str2index(square) -> tuple:
     except (TypeError, IndexError):
         raise TypeError("Invalid square format. Must be a string in algebraic notation (e.g. 'e2')")
 
+def move_piece(board, start, end):
+    """
+    Function to move a piece from the start square to the end square
+    Args:
+        board: 2D list representing the chess board
+        start: string or tuple of the starting square.
+        end: string or tuple of the ending square.
+    Format of input:
+        start: 'e2' or (6, 4)
+        end: 'e4' or (4, 4)
+    Returns:
+
+    """
+    start_row, start_col = str2index(start)
+    end_row, end_col = str2index(end)
+    board[end_row][end_col] = board[start_row][start_col]
+    board[start_row][start_col] = ''
+
 def is_horizontal_move(start, end):
     """
     Function to determine if the move is horizontal

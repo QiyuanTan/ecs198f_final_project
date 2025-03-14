@@ -95,7 +95,7 @@ class ChessLogic:
 		@param starting_piece: The piece at the starting square
 		@return: True if the starting piece is invalid, False otherwise
 		"""
-		return starting_piece == '' or (self.move == 'w' and starting_piece.islower()) or (self.move == 'b' and starting_piece.isupper())
+		return starting_piece == '' or (self.turn == 'w' and starting_piece.islower()) or (self.turn == 'b' and starting_piece.isupper())
 
 
 	def _invalid_move(self, move) -> bool:
