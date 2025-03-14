@@ -50,14 +50,26 @@ class Castling(MoveHandler):
 
 class EnPassant(MoveHandler):
     def applies(self, board, move):
-        raise NotImplementedError
+        start, end = move[:2], move[2:]
+        start_col, start_row = ord(start[0]) - ord('a'), 8 - int(start[1])
+        end_col, end_row = ord(end[0]) - ord('a'), 8 - int(end[1])
+        piece = board[start_row][start_col]
+        return piece.lower() == "p" and abs(start_col - end_col) == 1 and board[start_row][end_col].lower() == "p"
 
     def handle(self, board, move):
-        raise NotImplementedError
+        start, end = move[:2], move[2:]
+        start_col, start_row = ord(start[0]) - ord('a'), 8 - int(start[1])
+        end_col, end_row = ord(end[0]) - ord('a'), 8 - int(end[1])
+        board[start_row][start_col] = ""
+        board[start_row][end_col] = ""
+        board[end_row][end_col] = "P" if start_row == 3 else "p"
+        return f"{start}x{end}"
 
 class Promotion(MoveHandler):
     def applies(self, board, move):
-        raise NotImplementedError
+        return move[1] == "7" and move[3] == "8" and board[1][ord(move[0]) - ord('a')].lower() == "p"
 
     def handle(self, board, move):
-        raise NotImplementedError
+        end_col, end_row = ord(move[2]) - ord('a'), 8 - int(move[3])
+        board[end_row][end_col] = "Q" if board[end_row][end_col].isupper() else "q"
+        return f"{move}=Q"
