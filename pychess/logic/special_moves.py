@@ -69,30 +69,38 @@ class Castling(MoveHandler):
 
 class EnPassant(MoveHandler):
     def __init__(self):
-        self.last_move = None  # Track last move to verify En Passant condition
+        # Stores last move for en passant validation
+        self.last_move = None  
 
     def applies(self, board, move):
+        """ Check if the en passant move is valid. """
         start, end = move[:2], move[2:]
         start_col, start_row = ord(start[0]) - ord('a'), 8 - int(start[1])
         end_col, end_row = ord(end[0]) - ord('a'), 8 - int(end[1])
         piece = board[start_row][start_col]
 
         # Ensure it's a pawn moving diagonally
-        if piece.lower() != "p" or abs(start_col - end_col) != 1:
+        if piece.lower() != "p" or abs(start_col - end_col) != 1 or abs(start_row - end_row) != 1:
             return False
 
-        # Check if opponent's pawn just moved two squares forward
+        # Check last move to see if en passant is possible
         if self.last_move:
             last_start, last_end = self.last_move[:2], self.last_move[2:]
             last_start_col, last_start_row = ord(last_start[0]) - ord('a'), 8 - int(last_start[1])
             last_end_col, last_end_row = ord(last_end[0]) - ord('a'), 8 - int(last_end[1])
 
-            if last_end_col == end_col and abs(last_end_row - last_start_row) == 2:
+            # Opponent's pawn must have moved two squares forward to be capturable
+            if (last_start_row == (6 if piece == "p" else 1) and 
+                last_end_row == (4 if piece == "p" else 3) and 
+                last_start_col == last_end_col and 
+                last_end_col == end_col):
+
                 return True
 
         return False
 
     def handle(self, board, move):
+        """ Execute the en passant move. """
         start, end = move[:2], move[2:]
         start_col, start_row = ord(start[0]) - ord('a'), 8 - int(start[1])
         end_col, end_row = ord(end[0]) - ord('a'), 8 - int(end[1])
@@ -101,7 +109,7 @@ class EnPassant(MoveHandler):
         captured_pawn_row = start_row
         board[captured_pawn_row][end_col] = ""
 
-        # Move current pawn
+        # Move the current player's pawn
         board[start_row][start_col] = ""
         board[end_row][end_col] = "P" if start_row == 3 else "p"
 
