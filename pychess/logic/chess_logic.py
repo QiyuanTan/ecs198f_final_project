@@ -80,8 +80,7 @@ class ChessLogic:
 			return self.promotion.handle(self.board, move)
 
 		# determine if the game is over
-		if self._game_over():
-			return ""
+		self.result =  self._game_over()
 
 		# switch the move
 		self.turn = 'w' if self.turn == 'b' else 'b'
@@ -119,5 +118,24 @@ class ChessLogic:
 		"""
 		pass
 
-	def _game_over(self):
-		pass
+	def _game_over(self) -> str:
+		"""
+		Function to determine if the game is over.
+		This function is called after every move
+
+		Returns:
+			str: The result of the game
+				w - White Win
+
+				b - Black Win
+
+				d - Draw
+
+				'' - Game In Progress
+		"""
+		if self.check_king_path_for_check(self.board):
+			return 'w' if self.turn == 'b' else 'b'
+		elif self._stalemate():
+			return 'd'
+		else:
+			return ''
