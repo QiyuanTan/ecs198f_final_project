@@ -1,7 +1,7 @@
 import pytest
 from logic.chess_logic import ChessLogic
 
-@pytest.mark.parametrize("board, move, white_king_moved, black_king_moved, expected", [
+@pytest.mark.parametrize("board, move, white_castling_allowed, black_castling_allowed, expected", [
     # allowed
     (
             [
@@ -15,8 +15,8 @@ from logic.chess_logic import ChessLogic
                 ['R', '', '', '', 'K', 'B', 'N', 'R'],
             ],
             'e1c1',
-            False,
-            False,
+            True,
+            True,
             True
     ),
     # blocked
@@ -32,8 +32,8 @@ from logic.chess_logic import ChessLogic
                 ['R', '', 'B', '', 'K', '', 'N', 'R'],
             ],
             'e1c1',
-            False,
-            False,
+            True,
+            True,
             False
     ),
     # king moved
@@ -49,8 +49,8 @@ from logic.chess_logic import ChessLogic
                 ['R', '', '', '', 'K', 'B', 'N', 'R'],
             ],
             'e1c1',
-            True,
             False,
+            True,
             False
     ),
     # not a castling move
@@ -66,8 +66,8 @@ from logic.chess_logic import ChessLogic
                 ['R', '', '', '', 'K', 'B', 'N', 'R'],
             ],
             'e2e4',
-            False,
-            False,
+            True,
+            True,
             False
     ),
     # valid black castling
@@ -83,8 +83,8 @@ from logic.chess_logic import ChessLogic
                 ['R', 'N', 'B', 'Q', '', 'B', 'N', 'R'],
             ],
             'e8c8',
-            False,
-            False,
+            True,
+            True,
             True
     ),
     # blocked black castling
@@ -100,8 +100,8 @@ from logic.chess_logic import ChessLogic
                 ['R', 'N', 'B', 'Q', '', 'B', 'N', 'R'],
             ],
             'e8c8',
-            False,
-            False,
+            True,
+            True,
             False
     ),
     # black king moved
@@ -117,8 +117,8 @@ from logic.chess_logic import ChessLogic
                 ['R', 'N', 'B', 'Q', '', 'B', 'N', 'R'],
             ],
             'e8c8',
-            False,
             True,
+            False,
             False
     ),
     # black castling king side
@@ -134,8 +134,8 @@ from logic.chess_logic import ChessLogic
                 ['R', 'N', 'B', 'Q', '', 'B', 'N', 'R'],
             ],
             'e8g8',
-            False,
-            False,
+            True,
+            True,
             True
     ),
     # causes a check
@@ -151,17 +151,17 @@ from logic.chess_logic import ChessLogic
                 ['R', '', '', '', 'K', 'B', 'N', 'R'],
             ],
             'e8g8',
-            False,
-            False,
+            True,
+            True,
             False
     ),
 ])
-def test_castling_applies(board, move, white_king_moved, black_king_moved, expected):
+def test_castling_applies(board, move, white_castling_allowed, black_castling_allowed, expected):
     from logic.chess_logic import ChessLogic
     logic = ChessLogic()
     logic.board = board
-    logic.castling.white_king_moved = white_king_moved
-    logic.castling.black_king_moved = black_king_moved
+    logic.castling.white_castling_allowed = white_castling_allowed
+    logic.castling.back_castling_allowed = black_castling_allowed
     assert logic.castling.applies(logic.board, move) == expected
     
 def test_en_passant():
