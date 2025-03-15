@@ -40,10 +40,28 @@ class Castling(MoveHandler):
             # not a valid castling move
             return False
 
-        # check if the move is causing a check
-        # TODO: implement this
-        if is_square_attacked(board, "e1" if move.startswith("e1") else "e8", "w" if move.startswith("e1") else "b"):
+        # Get the color of the king
+        king_color = 'w' if get_piece(board, move[:2]).isupper() else 'b'
+        
+        # Check if the king is in check
+        if is_square_attacked(board, move[:2], king_color):
             return False
+            
+        # Check the squares the king passes through
+        if move in ["e1g1", "e8g8"]:  # King side castling
+            # Check f1/f8 (intermediate) and g1/g8 (final) squares
+            intermediate = "f" + move[1]
+            final = "g" + move[1]
+            if is_square_attacked(board, intermediate, king_color) or \
+               is_square_attacked(board, final, king_color):
+                return False
+        elif move in ["e1c1", "e8c8"]:  # Queen side castling
+            # Check d1/d8 (intermediate) and c1/c8 (final) squares
+            intermediate = "d" + move[1]
+            final = "c" + move[1]
+            if is_square_attacked(board, intermediate, king_color) or \
+               is_square_attacked(board, final, king_color):
+                return False
 
         return True
 
@@ -144,49 +162,53 @@ def is_square_attacked(board, square, color):
     pawn_row_offset = -1 if opponent_color == "w" else 1
     for pawn_col_offset in [-1, 1]:
         r, c = row + pawn_row_offset, col + pawn_col_offset
-        if 0 <= r < 8 and 0 <= c < 8 and board[r][c].lower() == 'p' and board[r][c].islower() == (opponent_color == "b"):
-            return True
+        if 0 <= r < 8 and 0 <= c < 8:
+            piece = board[r][c]
+            if piece.lower() == 'p' and piece.islower() == (opponent_color == "b"):
+                return True
 
     # Check for knight attacks
     knight_moves = [(-2, -1), (-2, 1), (2, -1), (2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2)]
     for dr, dc in knight_moves:
         r, c = row + dr, col + dc
-        if 0 <= r < 8 and 0 <= c < 8 and board[r][c].lower() == 'n' and board[r][c].islower() == (opponent_color == "b"):
-            return True
+        if 0 <= r < 8 and 0 <= c < 8:
+            piece = board[r][c]
+            if piece.lower() == 'n' and piece.islower() == (opponent_color == "b"):
+                return True
 
     # Check for rook/queen attacks (horizontal/vertical)
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     for dr, dc in directions:
-        r, c = row, col
+        r, c = row + dr, col + dc
         while 0 <= r < 8 and 0 <= c < 8:
+            piece = board[r][c]
+            if piece != "":
+                if (piece.lower() in ['r', 'q']) and piece.islower() == (opponent_color == "b"):
+                    return True
+                break  # Blocked by any piece
             r += dr
             c += dc
-            if 0 <= r < 8 and 0 <= c < 8:
-                piece = board[r][c]
-                if piece != "":
-                    if (piece.lower() == 'r' or piece.lower() == 'q') and piece.islower() == (opponent_color == "b"):
-                        return True
-                    break  # Blocked by another piece
 
     # Check for bishop/queen attacks (diagonal)
     directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
     for dr, dc in directions:
-        r, c = row, col
+        r, c = row + dr, col + dc
         while 0 <= r < 8 and 0 <= c < 8:
+            piece = board[r][c]
+            if piece != "":
+                if (piece.lower() in ['b', 'q']) and piece.islower() == (opponent_color == "b"):
+                    return True
+                break  # Blocked by any piece
             r += dr
             c += dc
-            if 0 <= r < 8 and 0 <= c < 8:
-                piece = board[r][c]
-                if piece != "":
-                    if (piece.lower() == 'b' or piece.lower() == 'q') and piece.islower() == (opponent_color == "b"):
-                        return True
-                    break  # Blocked by another piece
 
     # Check for king attacks (adjacent squares)
     king_moves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
     for dr, dc in king_moves:
         r, c = row + dr, col + dc
-        if 0 <= r < 8 and 0 <= c < 8 and board[r][c].lower() == 'k' and board[r][c].islower() == (opponent_color == "b"):
-            return True
+        if 0 <= r < 8 and 0 <= c < 8:
+            piece = board[r][c]
+            if piece.lower() == 'k' and piece.islower() == (opponent_color == "b"):
+                return True
 
-    return False  # Square is not under attack
+    return False
