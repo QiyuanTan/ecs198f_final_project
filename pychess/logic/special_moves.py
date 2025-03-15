@@ -212,3 +212,4 @@ def is_square_attacked(board, square, color):
                 return True
 
     return False
+

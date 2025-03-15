@@ -59,10 +59,14 @@ def test_is_diagonal_move():
     assert is_diagonal_move('a1', 'a8') == False
 
 def test_empty_between_horizontal():
-    from logic.board_utils import empty_between_horizontal
+    from logic.board_utils import empty_between_horizontal, str2index
     board = get_initial_board()
+    index = str2index('e4')
+    board[index[0]][index[1]] = "p"
     assert empty_between_horizontal(board, 'a1', 'h1') == False
     assert empty_between_horizontal(board, 'c3', 'g3') == True
+    assert empty_between_horizontal(board, 'b4', 'd4') == True
+    assert empty_between_horizontal(board, 'e4', 'g4') == True
     try:
         empty_between_horizontal(board, 'a1', 'h1')
     except Exception as e:
@@ -73,6 +77,8 @@ def test_empty_between_vertical():
     board = get_initial_board()
     assert empty_between_vertical(board, 'a1', 'a8') == False
     assert empty_between_vertical(board, 'c3', 'c6') == True
+    assert empty_between_vertical(board, 'b4', 'b6') == True
+    assert empty_between_vertical(board, 'b2', 'b6') == True
     try:
         empty_between_vertical(board, 'a1', 'h1')
     except Exception as e:
@@ -83,6 +89,8 @@ def test_empty_between_diagonal():
     board = get_initial_board()
     assert empty_between_diagonal(board, 'a1', 'h8') == False
     assert empty_between_diagonal(board, 'c3', 'f6') == True
+    assert empty_between_diagonal(board, 'b4', 'd2') == False
+    assert empty_between_diagonal(board, 'b4', 'c3') == True
     try:
         empty_between_diagonal(board, 'a1', 'h1')
     except Exception as e:
