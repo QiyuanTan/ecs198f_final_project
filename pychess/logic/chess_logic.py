@@ -70,11 +70,11 @@ class ChessLogic:
 			return self.en_passant.handle(self.board, move)
 
 		# handle normal moves
-		if self._invalid_move():
+		if self._invalid_move(move):
 			return ""
 
 		# move the piece
-		result =  self._handle_move(starting, ending)
+		result = self._handle_move_capture(starting, ending)
 
 		if self.promotion.applies(self.board, move):
 			return self.promotion.handle(self.board, move)
@@ -107,8 +107,13 @@ class ChessLogic:
 		#else return true
 		pass
 
-	def _handle_move(self, starting, ending):
-		raise NotImplementedError
+	def _handle_move_capture(self, starting, ending):
+		chess_notation = (f"{get_piece(self.board, starting) if get_piece(self.board, starting).lower != 'p' else ''}"
+						  f"{starting}"
+						  f"{'x' if get_piece(self.board, ending) != '' else ''}"
+						  f"{ending}")
+		self.board = move_piece(self.board, starting, ending)
+		return chess_notation
 
 	def check_king_path_for_check(self, board) -> bool:
 		"""
