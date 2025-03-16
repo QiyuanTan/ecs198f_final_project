@@ -38,8 +38,8 @@ class ChessLogic:
 		self.promotion = Promotion()
 		self.white_king_moved = False
 		self.black_king_moved = False
-		self. white_king_index = (7,4)
-		self. black_king_index = (0,4)
+		self.white_king_index = (7,4)
+		self.black_king_index = (0,4)
 
 	def play_move(self, move: str) -> str:
 		"""
@@ -115,13 +115,36 @@ class ChessLogic:
 		self.board = move_piece(self.board, starting, ending)
 		return chess_notation
 
-	def check_king_path_for_check(self, board) -> bool:
+	def white_king_checked(self, board) -> bool:
 		"""
-		check horizontal/vertical path from king(opposing queen/rook)
-		check diagonal path from king (opposing queen/bishop)
-		check knight path from king
+			Function to check if Black King is in check
+			Args:
+				board: 2D object representing board
+			Returns:
+				True or False if king is in check
 		"""
-		pass
+		# Convert the numeric coordinates to chess notation
+		row = str(8 - self.white_king_index[0])
+		col = chr(ord('a') + self.white_king_index[1])
+		square = col + row
+		print(f"White king is at square: {square}")
+		return is_square_attacked(board, square, "w")
+	
+	def black_king_checked(self, board) -> bool:
+		"""
+			Function to check if Black King is in check
+			Args:
+				board: 2D object representing board
+			Returns:
+				True or False if king is in check
+		"""
+				# Convert the numeric coordinates to chess notation
+		row = str(8 - self.black_king_index[0])
+		col = chr(ord('a') + self.black_king_index[1])
+		square = col + row
+		print(f"Black king is at square: {square}")
+		return is_square_attacked(board, square, "b")
+
 
 	def _game_over(self) -> str:
 		"""
@@ -144,3 +167,12 @@ class ChessLogic:
 			return 'd'
 		else:
 			return ''
+		
+if __name__ == "__main__":
+	# Create an instance of ChessLogic
+	chess = ChessLogic()
+	
+	# Test the white_king_checked function with the initial board state
+	is_checked = chess.black_king_checked(chess.board)
+	print(f"square: {is_checked}")
+	
