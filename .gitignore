@@ -3,3 +3,6 @@ venv/
 
 #Python pycache files
 __pycache__/
+
+#idea config files
+.idea/
