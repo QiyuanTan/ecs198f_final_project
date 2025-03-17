@@ -132,15 +132,33 @@ class ChessLogic:
     def move_causes_check(self):
         """
         Check if a move causes a check (king is under attack).
-        For now, since this is not fully implemented, return False 
-        (assuming moves don't cause check).
         
         Returns:
             bool: True if the move causes check, False otherwise
         """
-        # For now, until fully implemented, return False
-        return False
+        # 获取当前方的国王位置
+        king_piece = 'K' if self.turn == 'w' else 'k'
+        king_pos = None
         
+        # 扫描棋盘找到国王
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] == king_piece:
+                    king_pos = (row, col)
+                    break
+            if king_pos:
+                break
+                
+        # 如果找不到国王（在有效的游戏中不应该发生），返回False
+        if not king_pos:
+            return False
+            
+        # 转换为代数记号
+        king_square = chr(king_pos[1] + ord('a')) + str(8 - king_pos[0])
+        
+        # 检查国王是否正在被攻击
+        return is_square_attacked(self.board, king_square, self.turn)
+
     def check_king_path_for_check(self, board):
         """
         Check if the king is in check
@@ -391,6 +409,32 @@ class ChessLogic:
         
         return chess_notation
 
+    def has_legal_moves(self, side):
+        """
+        Check if the given side has any legal moves
+        
+        Args:
+            side: 'w' for white, 'b' for black
+            
+        Returns:
+            bool: True if the side has any legal moves, False otherwise
+        """
+        for start_row in range(8):
+            for start_col in range(8):
+                piece = self.board[start_row][start_col]
+                # Skip empty squares and opponent's pieces
+                if piece == '' or (side == 'w' and piece.islower()) or (side == 'b' and piece.isupper()):
+                    continue
+                # Try all possible moves for this piece
+                for end_row in range(8):
+                    for end_col in range(8):
+                        start = chr(start_col + ord('a')) + str(8 - start_row)
+                        end = chr(end_col + ord('a')) + str(8 - end_row)
+                        # If this is a legal move
+                        if not self._invalid_move(start + end):
+                            return True
+        return False
+
     def _game_over(self):
         """
         Check if the game is over.
@@ -398,7 +442,7 @@ class ChessLogic:
         Returns:
             str: 'w' if white wins, 'b' if black wins, 'd' if draw, '' if game is not over
         """
-        # For now, implement a simple check - if king is missing, that side loses
+        # First check if kings exist
         white_king_exists = False
         black_king_exists = False
         
@@ -410,13 +454,33 @@ class ChessLogic:
                 elif self.board[row][col] == 'k':
                     black_king_exists = True
                     
-        # Determine result
+        # If a king is missing, that side loses
         if not white_king_exists:
             return 'b'  # Black wins
         elif not black_king_exists:
             return 'w'  # White wins
-            
-        # Check for other game-over conditions (simplified for now)
-        # TODO: Implement checkmate and stalemate detection
-            
+        
+        # Check for checkmate and stalemate
+        # First, save the current turn
+        current_turn = self.turn
+        
+        # Check both sides
+        for side in ['w', 'b']:
+            self.turn = side
+            # If the king is in check
+            if self.check_king_path_for_check(self.board):
+                # If no legal moves exist and king is in check, it's checkmate
+                if not self.has_legal_moves(side):
+                    # Restore the original turn
+                    self.turn = current_turn
+                    return 'b' if side == 'w' else 'w'
+            else:
+                # If king is not in check but no legal moves exist, it's stalemate
+                if not self.has_legal_moves(side):
+                    # Restore the original turn
+                    self.turn = current_turn
+                    return 'd'
+        
+        # Restore the original turn
+        self.turn = current_turn
         return ''  # Game not over

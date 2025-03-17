@@ -10,56 +10,128 @@ class MoveHandler:
 class Castling(MoveHandler):
     def __init__(self):
         self.white_castling_allowed = True
-        self.back_castling_allowed = True
+        self.black_castling_allowed = True
+        self.white_king_moved = False
+        self.white_kingside_rook_moved = False
+        self.white_queenside_rook_moved = False
+        self.black_king_moved = False
+        self.black_kingside_rook_moved = False
+        self.black_queenside_rook_moved = False
 
     def applies(self, board, move):
-        # check if the king has moved
-        if (not self.white_castling_allowed) and get_piece(board, move[:2]).isupper():
+        """
+        Check if castling is allowed
+        
+        Args:
+            board: The current board state
+            move: The move string (e.g. 'e1g1' for white kingside castling)
+            
+        Returns:
+            bool: True if castling is allowed, False otherwise
+        """
+        # Check if the king has moved
+        if self.white_king_moved and get_piece(board, move[:2]).isupper():
             return False
-        if (not self.back_castling_allowed) and get_piece(board, move[:2]).islower():
+        if self.black_king_moved and get_piece(board, move[:2]).islower():
             return False
 
-        # check if the path is clear
-        if move == "e1g1" or move == "e1h1":
-            # check for the king side white
-            return empty_between_horizontal(board, "e1", "g1") and not is_square_attacked(board, "g1", "w")
-        elif move == "e1c1" or move == "e1a1":
-            # check for the queen side white
-            return empty_between_horizontal(board, "e1", "b1") and not is_square_attacked(board, "c1", "w")
-        elif move == "e8g8" or move == "e8h8":
-            # check for the king side black
-            return empty_between_horizontal(board, "e8", "g8") and not is_square_attacked(board, "g8", "b")
-        elif move == "e8c8" or move == "e8a8":
-            # check for the queen side black
-            return empty_between_horizontal(board, "e8", "b8") and not is_square_attacked(board, "c8", "b")
+        # Check if the path is clear and safe
+        if move == "e1g1":  # White kingside
+            if self.white_kingside_rook_moved:
+                return False
+            # Check if squares between king and rook are empty and not attacked
+            return (empty_between_horizontal(board, "e1", "h1") and
+                   not is_square_attacked(board, "e1", "w") and
+                   not is_square_attacked(board, "f1", "w") and
+                   not is_square_attacked(board, "g1", "w"))
+        elif move == "e1c1":  # White queenside
+            if self.white_queenside_rook_moved:
+                return False
+            # Check if squares between king and rook are empty and not attacked
+            return (empty_between_horizontal(board, "e1", "a1") and
+                   not is_square_attacked(board, "e1", "w") and
+                   not is_square_attacked(board, "d1", "w") and
+                   not is_square_attacked(board, "c1", "w"))
+        elif move == "e8g8":  # Black kingside
+            if self.black_kingside_rook_moved:
+                return False
+            # Check if squares between king and rook are empty and not attacked
+            return (empty_between_horizontal(board, "e8", "h8") and
+                   not is_square_attacked(board, "e8", "b") and
+                   not is_square_attacked(board, "f8", "b") and
+                   not is_square_attacked(board, "g8", "b"))
+        elif move == "e8c8":  # Black queenside
+            if self.black_queenside_rook_moved:
+                return False
+            # Check if squares between king and rook are empty and not attacked
+            return (empty_between_horizontal(board, "e8", "a8") and
+                   not is_square_attacked(board, "e8", "b") and
+                   not is_square_attacked(board, "d8", "b") and
+                   not is_square_attacked(board, "c8", "b"))
         else:
-            # not a valid castling move
+            # Not a valid castling move
             return False
 
     def handle(self, board, move):
-        if move == "e1g1":
-            board[7][4], board[7][7] = "", ""
-            board[7][6], board[7][5] = "K", "R"
-            self.white_castling_allowed = True
-        elif move == "e1c1":
-            board[7][4], board[7][0] = "", ""
-            board[7][2], board[7][3] = "K", "R"
-            self.white_castling_allowed = True
-        elif move == "e8g8":
-            board[0][4], board[0][7] = "", ""
-            board[0][6], board[0][5] = "k", "r"
-            self.back_castling_allowed = True
-        elif move == "e8c8":
-            board[0][4], board[0][0] = "", ""
-            board[0][2], board[0][3] = "k", "r"
-            self.back_castling_allowed = True
+        """
+        Execute the castling move
+        
+        Args:
+            board: The current board state
+            move: The move string (e.g. 'e1g1' for white kingside castling)
+            
+        Returns:
+            str: The chess notation for the move ('O-O' for kingside, 'O-O-O' for queenside)
+        """
+        if move == "e1g1":  # White kingside
+            board[7][4], board[7][7] = "", ""  # Remove king and rook
+            board[7][6], board[7][5] = "K", "R"  # Place king and rook
+            self.white_king_moved = True
+            self.white_kingside_rook_moved = True
+        elif move == "e1c1":  # White queenside
+            board[7][4], board[7][0] = "", ""  # Remove king and rook
+            board[7][2], board[7][3] = "K", "R"  # Place king and rook
+            self.white_king_moved = True
+            self.white_queenside_rook_moved = True
+        elif move == "e8g8":  # Black kingside
+            board[0][4], board[0][7] = "", ""  # Remove king and rook
+            board[0][6], board[0][5] = "k", "r"  # Place king and rook
+            self.black_king_moved = True
+            self.black_kingside_rook_moved = True
+        elif move == "e8c8":  # Black queenside
+            board[0][4], board[0][0] = "", ""  # Remove king and rook
+            board[0][2], board[0][3] = "k", "r"  # Place king and rook
+            self.black_king_moved = True
+            self.black_queenside_rook_moved = True
+            
         return "O-O" if "g" in move else "O-O-O"
 
-    def update(self, move):
-        if move[2:] == "e1" or move[2:] == "a1" or move[:2] == "h8":
-            self.white_castling_allowed = False
-        elif move[2:] == "e8" or move[2:] == "a8" or move[:2] == "h8":
-            self.back_castling_allowed = False
+    def update(self, board, move):
+        """
+        Update the castling flags based on piece movements
+        
+        Args:
+            board: The current board state
+            move: The move string (e.g. 'e2e4')
+        """
+        start, end = move[:2], move[2:]
+        piece = get_piece(board, start)
+        
+        # King moves
+        if start == "e1":
+            self.white_king_moved = True
+        elif start == "e8":
+            self.black_king_moved = True
+            
+        # Rook moves
+        if start == "a1":
+            self.white_queenside_rook_moved = True
+        elif start == "h1":
+            self.white_kingside_rook_moved = True
+        elif start == "a8":
+            self.black_queenside_rook_moved = True
+        elif start == "h8":
+            self.black_kingside_rook_moved = True
 
 
 class EnPassant(MoveHandler):
