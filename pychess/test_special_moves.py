@@ -1,7 +1,7 @@
 import pytest
 from logic.chess_logic import ChessLogic
 
-@pytest.mark.parametrize("board, move, white_castling_allowed, black_castling_allowed, expected", [
+@pytest.mark.parametrize("board, move, white_king_moved, black_king_moved, expected", [
     # allowed
     (
         [
@@ -156,7 +156,7 @@ from logic.chess_logic import ChessLogic
         False
     ),
 ])
-def test_castling_applies(board, move, white_castling_allowed, black_castling_allowed, expected):
+def test_castling_applies(board, move, white_king_moved, black_king_moved, expected):
     from logic.chess_logic import ChessLogic
     logic = ChessLogic()
     logic.board = board

@@ -18,7 +18,7 @@ def str2index(square) -> tuple:
     Returns: a tuple of the row and column index
 
     """
-    if square is tuple:
+    if isinstance(square, tuple):
         return square
 
     try:

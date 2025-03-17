@@ -69,7 +69,14 @@ class EnPassant(MoveHandler):
 
     def applies(self, board, move):
         """ Check if the en passant move is valid. """
-        start, end = move[:2], move[2:]
+        # 处理带有 'x' 的捕获符号
+        if 'x' in move:
+            capture_index = move.index('x')
+            start = move[:capture_index]
+            end = move[capture_index+1:]
+        else:
+            start, end = move[:2], move[2:]
+            
         start_col, start_row = ord(start[0]) - ord('a'), 8 - int(start[1])
         end_col, end_row = ord(end[0]) - ord('a'), 8 - int(end[1])
         piece = board[start_row][start_col]
@@ -108,14 +115,70 @@ class EnPassant(MoveHandler):
         board[start_row][start_col] = ""
         board[end_row][end_col] = "P" if start_row == 3 else "p"
 
-        return f"{start}x{end}"
+        return f"P{start}x{end}"
 
 
 class Promotion(MoveHandler):
     def applies(self, board, move):
-        return move[1] == "7" and move[3] == "8" and board[1][ord(move[0]) - ord('a')].lower() == "p"
+        """
+        Check if a pawn promotion is valid
+        
+        Args:
+            board: The current board state
+            move: The move string (e.g. 'e7e8')
+            
+        Returns:
+            bool: True if the move is a valid promotion
+        """
+        # Ensure move has correct length
+        if len(move) < 4:
+            return False
+            
+        start, end = move[:2], move[2:4]
+        start_row, start_col = str2index(start)
+        end_row, end_col = str2index(end)
+        piece = board[start_row][start_col]
+        
+        # Check if this is a pawn
+        if piece.lower() != 'p':
+            return False
+            
+        # Check if white pawn reaches 8th rank or black pawn reaches 1st rank
+        if (piece == 'P' and end_row == 0) or (piece == 'p' and end_row == 7):
+            return True
+            
+        return False
 
     def handle(self, board, move):
-        end_col, end_row = ord(move[2]) - ord('a'), 8 - int(move[3])
-        board[end_row][end_col] = "Q" if board[end_row][end_col].isupper() else "q"
-        return f"{move}=Q"
+        """
+        Execute a pawn promotion
+        
+        Args:
+            board: The current board state
+            move: The move string (e.g. 'e7e8=Q')
+            
+        Returns:
+            str: The chess notation for the move
+        """
+        start, end = move[:2], move[2:4]
+        start_row, start_col = str2index(start)
+        end_row, end_col = str2index(end)
+        
+        # 获取原始棋子是白棋还是黑棋
+        is_white = board[start_row][start_col].isupper()
+        
+        # Get the piece type to promote to (Q by default)
+        promotion_piece = 'Q'
+        if '=' in move:
+            promotion_piece = move.split('=')[1][0]
+            
+        # Determine if it's a white or black piece
+        piece_case = promotion_piece.upper() if is_white else promotion_piece.lower()
+        
+        # Move the pawn and replace with promoted piece
+        move_piece(board, start, end)
+        board[end_row][end_col] = piece_case
+        
+        # Return the appropriate notation - 根据棋子颜色设置前缀
+        pawn_prefix = 'P' if is_white else 'p'
+        return f"{pawn_prefix}{start}{end}={promotion_piece.upper()}"  # 升变后的棋子总是大写

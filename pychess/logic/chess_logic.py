@@ -1,5 +1,5 @@
-from pychess.logic.board_utils import *
-from pychess.logic.special_moves import Castling, EnPassant, Promotion
+from logic.board_utils import *
+from logic.special_moves import Castling, EnPassant, Promotion
 
 
 class ChessLogic:
@@ -55,8 +55,26 @@ class ChessLogic:
         Returns:
             str: Extended Chess Notation for the move, if valid. Empty str if the move is invalid
         """
-        starting = move[:2]
-        ending = move[2:]
+        # Handle capture notation with 'x'
+        promotion_piece = ""
+        if 'x' in move:
+            capture_index = move.index('x')
+            starting = move[:capture_index]
+            ending = move[capture_index+1:]
+            if '=' in ending:
+                eq_index = ending.index('=')
+                promotion_piece = ending[eq_index:]
+                ending = ending[:eq_index]
+        else:
+            # Regular move format
+            starting = move[:2]
+            if '=' in move:
+                eq_index = move.index('=')
+                promotion_piece = move[eq_index:]
+                ending = move[2:eq_index]
+            else:
+                ending = move[2:]
+            
         starting_piece = get_piece(self.board, starting)
         ending_piece = get_piece(self.board, ending)
 
@@ -66,28 +84,40 @@ class ChessLogic:
             return ""
 
         # handle special moves
-        if self.castling.applies(self.board, move):
-            return self.castling.handle(self.board, move)
-        elif self.en_passant.applies(self.board, move):
-            return self.en_passant.handle(self.board, move)
+        if self.castling.applies(self.board, starting + ending):
+            return self.castling.handle(self.board, starting + ending)
+        elif self.en_passant.applies(self.board, starting + ending):
+            return self.en_passant.handle(self.board, starting + ending)
 
         # handle normal moves
-        if self._invalid_move(move):
+        if self._invalid_move(starting + ending):
             return ""
 
-        # move the piece
+        # 检查是否是升变
+        if promotion_piece and starting_piece.lower() == 'p':
+            # 检查目标位置是否是第1/8行
+            end_row = 8 - int(ending[1])
+            if (starting_piece.isupper() and end_row == 0) or (starting_piece.islower() and end_row == 7):
+                # 移动棋子并处理升变
+                result = self.promotion.handle(self.board, starting + ending + promotion_piece)
+                
+                # determine if the game is over
+                self.result = self._game_over()
+                
+                # switch the move
+                self.turn = 'w' if self.turn == 'b' else 'b'
+                
+                return result
+
+        # 普通棋子移动
         result = self._handle_move_capture(starting, ending)
 
-        if self.promotion.applies(self.board, move):
-            return self.promotion.handle(self.board, move)
-
         # determine if the game is over
-        # self.result = self._game_over()
+        self.result = self._game_over()
 
         # switch the move
         self.turn = 'w' if self.turn == 'b' else 'b'
 
-        print(result)
         return result
 
     def _invalid_starting_piece(self, starting_piece):
@@ -100,31 +130,90 @@ class ChessLogic:
                     self.turn == 'b' and starting_piece.isupper())
 
     def move_causes_check(self):
-        pass
+        """
+        Check if a move causes a check (king is under attack).
+        For now, since this is not fully implemented, return False 
+        (assuming moves don't cause check).
+        
+        Returns:
+            bool: True if the move causes check, False otherwise
+        """
+        # For now, until fully implemented, return False
+        return False
+        
+    def check_king_path_for_check(self, board):
+        """
+        Check if the king is in check
+        
+        Args:
+            board: The current board state
+            
+        Returns:
+            bool: True if the king is in check, False otherwise
+        """
+        # 确定当前方
+        king_piece = 'K' if self.turn == 'w' else 'k'
+        king_pos = None
+        
+        # 扫描棋盘找到国王
+        for row in range(8):
+            for col in range(8):
+                if board[row][col] == king_piece:
+                    king_pos = (row, col)
+                    break
+            if king_pos:
+                break
+                
+        # 如果找不到国王（在有效的游戏中不应该发生），返回False
+        if not king_pos:
+            return False
+            
+        # 转换为代数记号
+        king_square = chr(king_pos[1] + ord('a')) + str(8 - king_pos[0])
+        
+        # 检查国王是否正在被攻击
+        return is_square_attacked(board, king_square, self.turn)
 
     def _invalid_move(self, move) -> bool:
         """
-            Function to check if move is valid
-            Args:
-                move: the move that the player is making
-            Returns:
-                True if move is invalid, else False
+        Function to check if move is valid
+        Args:
+            move: the move that the player is making
+        Returns:
+            True if move is invalid, else False
         """
-        # # check if destination is valid
-        # # get the piece
-        # cur_piece: str = get_piece(self.board, move[:2])
-        # # validate piece
-        # if self._invalid_starting_piece(cur_piece):
-        #     return True
-        #
-        # # check if destination is in its path, if not return false
-        # if self.turn == 'w':
-        #     # return invalid_move_for_white(move, cur_piece)
-        #     print('whites turn')
-        # # return invalid_move_for_black(move, cur_piece)
-        #
-        # pass
-        return self.invalid_move(self.board, move, self.turn)
+        # 检查格式错误
+        if '=' not in move and 'x' not in move:
+            # 标准格式应该是4个字符，如"e2e4"
+            if len(move) != 4:
+                return True
+                
+        # 处理带有 'x' 的捕获符号
+        if 'x' in move:
+            capture_index = move.index('x')
+            starting = move[:capture_index]
+            ending = move[capture_index+1:]
+            # 确保起始位置和目标位置格式正确
+            if len(starting) != 2 or len(ending) != 2:
+                return True
+        else:
+            # 正常格式提取
+            starting = move[:2]
+            ending = move[2:] if '=' not in move else move[2:].split('=')[0]
+            # 确保终点位置格式正确
+            if '=' not in move and len(ending) != 2:
+                return True
+            
+        # 检查是否是王车易位
+        if (starting == 'e1' and (ending == 'g1' or ending == 'c1')) or \
+           (starting == 'e8' and (ending == 'g8' or ending == 'c8')):
+            # 验证王车易位条件
+            castle_allowed = self.castling.applies(self.board, starting + ending)
+            # 如果王车易位不允许，返回True表示这是一个无效的移动
+            return not castle_allowed
+        
+        # 正常的移动检查
+        return self.invalid_move(self.board, starting + ending, self.turn)
 
     def invalid_move(self, board, move, side) -> bool:
         """
@@ -134,7 +223,22 @@ class ChessLogic:
             Returns:
                 True if move is invalid, else False
         """
-        piece = get_piece(board, move[2:])
+        # 处理带有 'x' 的捕获符号
+        if 'x' in move:
+            capture_index = move.index('x')
+            starting = move[:capture_index]
+            ending = move[capture_index+1:]
+        else:
+            # 确保我们总是使用不带"="的移动格式
+            if '=' in move:
+                eq_index = move.index('=')
+                move = move[:eq_index]
+            starting = move[:2]
+            ending = move[2:]
+            
+        starting_piece = get_piece(board, starting)  # 起始位置的棋子
+        ending_piece = get_piece(board, ending)      # 目标位置的棋子
+        
         # set side
         to_self = lambda p: p.upper() if side == 'w' else p.lower()
         is_self = lambda p: p.isupper() if side == 'w' else p.islower()
@@ -142,220 +246,177 @@ class ChessLogic:
         pawn_base = 6 if side == 'w' else 1
 
         # check to make sure youre not moving on top of another white piece
-        dest_piece = get_piece(board, move[2:])
-        if is_self(dest_piece):
+        if is_self(ending_piece):
             return True
+            
         # check if pieces blocking it, if not return false
         # check if causing a check, if so then return false TBD ADD SOON
         # else return true
         # ex move: e2e3
-        is_horizontal = is_horizontal_move(move[:2], move[2:])
-        is_diagonal = is_diagonal_move(move[:2], move[2:])
-        is_vertical = is_vertical_move(move[:2], move[2:])
-        srow, scol = str2index(move[:2])
-        erow, ecol = str2index(move[2:])
+        is_horizontal = is_horizontal_move(starting, ending)
+        is_diagonal = is_diagonal_move(starting, ending)
+        is_vertical = is_vertical_move(starting, ending)
+        srow, scol = str2index(starting)
+        erow, ecol = str2index(ending)
 
-        if piece == to_self("P"):  # if the piece is a pawn
-
+        piece_type = starting_piece.lower()
+        
+        if piece_type == "p":  # if the piece is a pawn
+            # check if it's a capture (diagonal move)
+            if is_diagonal:
+                if abs(erow - srow) == 1 and abs(ecol - scol) == 1:
+                    # 确保对角线移动是为了捕获
+                    if ending_piece != '' or (self.en_passant and self.en_passant.applies(board, starting + ending)):
+                        return False
+                return True
+                
             if not is_vertical:
                 return True
-
-            if is_diagonal:
-                if erow == srow + delta and get_piece(board, move[:2]) != '':
-                    return False
-                else:
-                    return True
+                
+            # 处理向后移动
+            if (side == 'w' and erow > srow) or (side == 'b' and erow < srow):
+                return True  # 不允许向后移动
 
             if srow == pawn_base:  # this means its at the starting row i.e "e2,a2"
-                if erow != srow + delta or erow != srow + 2 * delta:  # if ending square is not 1 or 2 spaces above start
+                if abs(erow - srow) > 2:  # 不能移动超过两格
                     return True
+                if empty_between_vertical(board, starting, ending) and not self.move_causes_check():
+                    # make sure nothing is in front of pawn
+                    return False
                 else:
-                    if empty_between_vertical(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-                    else:
-                        return True
+                    return True
             else:
-                if erow != srow + delta:  # if ending square is not 1 above
+                if abs(erow - srow) > 1:  # 非起始位置只能移动一格
                     return True
+                if empty_between_vertical(board, starting, ending) and not self.move_causes_check():
+                    # make sure nothing is in front of pawn
+                    return False
                 else:
-                    if empty_between_vertical(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-                    else:
-                        return True
-        elif piece == to_self("R"):
+                    return True
+        elif piece_type == "r":  # Rook
             if is_diagonal:
                 return True
+            if not (is_horizontal or is_vertical):
+                return True
+                
             if is_horizontal:
-                if empty_between_horizontal(board, move[0:2], move[2:0]) and not self.move_causes_check():
+                if empty_between_horizontal(board, starting, ending) and not self.move_causes_check():
                     return False
-                else:
-                    return True
-            if is_vertical:
-                if empty_between_vertical(board, move[0:2], move[2:0]) and not self.move_causes_check():
+            elif is_vertical:
+                if empty_between_vertical(board, starting, ending) and not self.move_causes_check():
                     return False
-                else:
-                    return True
-        elif piece == to_self("B"):
+            return True
+            
+        elif piece_type == "b":  # Bishop
             if not is_diagonal:
                 return True
 
-            if empty_between_diagonal(board, move[0:2], move[2:0]) and not self.move_causes_check():
+            if empty_between_diagonal(board, starting, ending) and not self.move_causes_check():
                 return False
-            else:
-                return True
-        elif piece == to_self("N"):
-            if is_vertical or is_horizontal or is_diagonal:
-                return True
-
-            if erow == srow + 2 and ecol == scol + 1 and not self.move_causes_check():  # up two, one right
-                return False
-
-            if erow == srow + 2 and ecol == scol - 1 and not self.move_causes_check():  # up two, one left
-                return False
-
-            if erow == srow - 2 and ecol == scol - 1 and not self.move_causes_check():  # down two, one left
-                return False
-
-            if erow == srow - 2 and ecol == scol + 1 and not self.move_causes_check():  # up two, one right
-                return False
-
-            if erow == srow + 1 and ecol == scol + 2 and not self.move_causes_check():  # up one two right
-                return False
-
-            if erow == srow + 1 and ecol == scol - 2 and not self.move_causes_check():  # up one two left
-                return False
-
-            if erow == srow - 1 and ecol == scol + 2 and not self.move_causes_check():  # down one two right
-                return False
-
-            if erow == srow - 1 and ecol == scol - 2 and not self.move_causes_check():  # down one two left
-                return False
-
             return True
-        elif piece == to_self("Q"):
-            if not (is_horizontal and is_diagonal and is_vertical):
-                return True
-            if is_horizontal:
-                if empty_between_horizontal(board, move[0:2], move[2:]) and not self.move_causes_check():
-                    return False
-
-            if is_vertical:
-                if empty_between_vertical(board, move[0:2], move[2:]) and not self.move_causes_check():
-                    return False
-
-            if is_diagonal:
-                if empty_between_diagonal(board, move[0:2], move[2:]) and not self.move_causes_check():
-                    return False
-
+            
+        elif piece_type == "n":  # Knight
+            # 确保移动是L形的
+            knight_moves = [
+                (2, 1), (2, -1), (-2, 1), (-2, -1),
+                (1, 2), (1, -2), (-1, 2), (-1, -2)
+            ]
+            if (erow - srow, ecol - scol) in knight_moves and not self.move_causes_check():
+                return False
             return True
-        else:
-            if not (is_horizontal and is_diagonal and is_vertical):
+            
+        elif piece_type == "q":  # Queen
+            if not (is_horizontal or is_diagonal or is_vertical):
                 return True
-
-            if is_vertical:
-
-                if erow != srow + 1 or erow != srow - 1:  # if ending square is not 1 vertical
-                    return True
-                else:
-                    if empty_between_vertical(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-                    else:
-                        return True
-
+                
             if is_horizontal:
-
-                if ecol != scol + 1 or ecol != scol - 1:  # if ending square is not 1 horizontal
-                    return True
-                else:
-                    if empty_between_horizontal(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-                    else:
-                        return True
-            if is_diagonal:
-
-                if ecol == scol + 1 and erow != erow - 1:  # bottom right
-                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-
-                if ecol == scol - 1 and erow != erow - 1:  # bottom left
-                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-
-                if ecol == scol + 1 and erow != erow - 1:  # top left
-                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-                if ecol == scol + 1 and erow != erow + 1:  # top right
-                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-
-                return True
-
-        raise ValueError("Move not handled")
+                if empty_between_horizontal(board, starting, ending) and not self.move_causes_check():
+                    return False
+            elif is_vertical:
+                if empty_between_vertical(board, starting, ending) and not self.move_causes_check():
+                    return False
+            elif is_diagonal:
+                if empty_between_diagonal(board, starting, ending) and not self.move_causes_check():
+                    return False
+            return True
+            
+        elif piece_type == "k":  # King
+            # 检查是否是一步移动（横向、纵向或对角线）
+            if abs(erow - srow) <= 1 and abs(ecol - scol) <= 1:
+                # 确保国王不走入被攻击的方格
+                king_square = ending
+                if not is_square_attacked(board, king_square, side) and not self.move_causes_check():
+                    return False
+            
+            # 检查王车易位
+            if starting == "e1" and side == "w":
+                if ending == "g1" or ending == "c1":
+                    return False
+            elif starting == "e8" and side == "b":
+                if ending == "g8" or ending == "c8":
+                    return False
+                    
+            return True
+        
+        # 如果没有处理的棋子类型
+        return True
 
     def _handle_move_capture(self, starting, ending):
-        chess_notation = (f"{get_piece(self.board, starting) if get_piece(self.board, starting).lower != 'p' else ''}"
-                          f"{starting}"
-                          f"{'x' if get_piece(self.board, ending) != '' else ''}"
-                          f"{ending}")
-        self.board = move_piece(self.board, starting, ending)
+        """
+        Function to handle a normal move and generate the correct chess notation
+        
+        Args:
+            starting (str): Starting square (e.g. 'e2')
+            ending (str): Ending square (e.g. 'e4')
+            
+        Returns:
+            str: Extended Chess Notation for the move
+        """
+        # Get the piece and determine notation
+        starting_piece = get_piece(self.board, starting)
+        ending_piece = get_piece(self.board, ending)
+        
+        # Create the chess notation with the piece prefix
+        # Use uppercase letters for piece types: P (pawn), N (knight), B (bishop), R (rook), Q (queen), K (king)
+        piece_prefix = starting_piece.upper() if starting_piece.lower() != 'p' else 'P'
+        capture_symbol = 'x' if ending_piece != '' else ''
+        
+        chess_notation = f"{piece_prefix}{starting}{capture_symbol}{ending}"
+        
+        # Move the piece on the board
+        move_piece(self.board, starting, ending)
+        
+        # Update the last move for en passant detection
+        self.en_passant.last_move = f"{starting}{ending}"
+        
         return chess_notation
 
-    def white_king_checked(self, board) -> bool:
+    def _game_over(self):
         """
-            Function to check if Black King is in check
-            Args:
-                board: 2D object representing board
-            Returns:
-                True or False if king is in check
-        """
-        # Convert the numeric coordinates to chess notation
-        row = str(8 - self.white_king_index[0])
-        col = chr(ord('a') + self.white_king_index[1])
-        square = col + row
-        print(f"White king is at square: {square}")
-        return is_square_attacked(board, square, "w")
-
-    def black_king_checked(self, board) -> bool:
-        """
-            Function to check if Black King is in check
-            Args:
-                board: 2D object representing board
-            Returns:
-                True or False if king is in check
-        """
-        # Convert the numeric coordinates to chess notation
-        row = str(8 - self.black_king_index[0])
-        col = chr(ord('a') + self.black_king_index[1])
-        square = col + row
-        print(f"Black king is at square: {square}")
-        return is_square_attacked(board, square, "b")
-
-    def _game_over(self) -> str:
-        """
-        Function to determine if the game is over.
-        This function is called after every move
-
+        Check if the game is over.
+        
         Returns:
-            str: The result of the game
-                w - White Win
-
-                b - Black Win
-
-                d - Draw
-
-                '' - Game In Progress
+            str: 'w' if white wins, 'b' if black wins, 'd' if draw, '' if game is not over
         """
-        if self.check_king_path_for_check(self.board):
-            return 'w' if self.turn == 'b' else 'b'
-        elif self._stalemate():
-            return 'd'
-        else:
-            return ''
+        # For now, implement a simple check - if king is missing, that side loses
+        white_king_exists = False
+        black_king_exists = False
+        
+        # Scan the board for kings
+        for row in range(8):
+            for col in range(8):
+                if self.board[row][col] == 'K':
+                    white_king_exists = True
+                elif self.board[row][col] == 'k':
+                    black_king_exists = True
+                    
+        # Determine result
+        if not white_king_exists:
+            return 'b'  # Black wins
+        elif not black_king_exists:
+            return 'w'  # White wins
+            
+        # Check for other game-over conditions (simplified for now)
+        # TODO: Implement checkmate and stalemate detection
+            
+        return ''  # Game not over
