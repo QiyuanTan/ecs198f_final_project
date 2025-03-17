@@ -125,7 +125,7 @@ class ChessLogic:
 
         pass
 
-    def invalid_move_for_white(self, move, piece) -> bool:
+    def invalid_move(self, board, move, piece, side) -> bool:
         """
             Function to check if move is valid for white
             Args:
@@ -134,9 +134,15 @@ class ChessLogic:
             Returns:
                 True if move is invalid, else False
         """
+        # set side
+        to_self = lambda p: p.upper() if side == 'w' else p.lower()
+        is_self = lambda p: p.isupper() if side == 'w' else p.islower()
+        delta = -1 if side == 'w' else 1
+        pawn_base = 6 if side == 'w' else 1
+
         # check to make sure youre not moving on top of another white piece
-        dest_piece = get_piece(self.board, move[2:])
-        if not (dest_piece.islower() or dest_piece == ""):
+        dest_piece = get_piece(board, move[2:])
+        if is_self(dest_piece):
             return True
         # check if pieces blocking it, if not return false
         # check if causing a check, if so then return false TBD ADD SOON
@@ -148,51 +154,57 @@ class ChessLogic:
         srow, scol = str2index(move[:2])
         erow, ecol = str2index(move[2:])
 
-        if piece == "P":  # if the piece is a pawn
+        if piece == to_self("P"):  # if the piece is a pawn
 
             if not is_vertical:
                 return True
 
-            if srow == 2:  # this means its at the starting row i.e "e2,a2"
-                if erow != srow + 1 or erow != srow + 2:  # if ending square is not 1 or 2 spaces above start
+            if is_diagonal:
+                if erow == srow + delta and get_piece(board, move[:2]) != '':
+                    return False
+                else:
+                    return True
+
+            if srow == pawn_base:  # this means its at the starting row i.e "e2,a2"
+                if erow != srow + delta or erow != srow + 2 * delta:  # if ending square is not 1 or 2 spaces above start
                     return True
                 else:
-                    if empty_between_vertical(self.board, move[:2], move[2:]) and not self.move_causes_check():
+                    if empty_between_vertical(board, move[:2], move[2:]) and not self.move_causes_check():
                         # make sure nothing is in front of pawn
                         return False
                     else:
                         return True
             else:
-                if erow != srow + 1:  # if ending square is not 1 above
+                if erow != srow + delta:  # if ending square is not 1 above
                     return True
                 else:
-                    if empty_between_vertical(self.board, move[:2], move[2:]) and not self.move_causes_check():
+                    if empty_between_vertical(board, move[:2], move[2:]) and not self.move_causes_check():
                         # make sure nothing is in front of pawn
                         return False
                     else:
                         return True
-        elif piece == "R":
+        elif piece == to_self("R"):
             if is_diagonal:
                 return True
             if is_horizontal:
-                if empty_between_horizontal(self.board, move[0:2], move[2:0]) and not self.move_causes_check():
+                if empty_between_horizontal(board, move[0:2], move[2:0]) and not self.move_causes_check():
                     return False
                 else:
                     return True
             if is_vertical:
-                if empty_between_vertical(self.board, move[0:2], move[2:0]) and not self.move_causes_check():
+                if empty_between_vertical(board, move[0:2], move[2:0]) and not self.move_causes_check():
                     return False
                 else:
                     return True
-        elif piece == "B":
+        elif piece == to_self("B"):
             if not is_diagonal:
                 return True
 
-            if empty_between_diagonal(self.board, move[0:2], move[2:0]) and not self.move_causes_check():
+            if empty_between_diagonal(board, move[0:2], move[2:0]) and not self.move_causes_check():
                 return False
             else:
                 return True
-        elif piece == "N":
+        elif piece == to_self("N"):
             if is_vertical or is_horizontal or is_diagonal:
                 return True
 
@@ -221,19 +233,19 @@ class ChessLogic:
                 return False
 
             return True
-        elif piece == "Q":
+        elif piece == to_self("Q"):
             if not (is_horizontal and is_diagonal and is_vertical):
                 return True
             if is_horizontal:
-                if empty_between_horizontal(self.board, move[0:2], move[2:]) and not self.move_causes_check():
+                if empty_between_horizontal(board, move[0:2], move[2:]) and not self.move_causes_check():
                     return False
 
             if is_vertical:
-                if empty_between_vertical(self.board, move[0:2], move[2:]) and not self.move_causes_check():
+                if empty_between_vertical(board, move[0:2], move[2:]) and not self.move_causes_check():
                     return False
 
             if is_diagonal:
-                if empty_between_diagonal(self.board, move[0:2], move[2:]) and not self.move_causes_check():
+                if empty_between_diagonal(board, move[0:2], move[2:]) and not self.move_causes_check():
                     return False
 
             return True
@@ -246,8 +258,8 @@ class ChessLogic:
                 if erow != srow + 1 or erow != srow - 1:  # if ending square is not 1 vertical
                     return True
                 else:
-                    if empty_between_vertical(self.board, move[:2], move[
-                                                                    2:]) and not self.move_causes_check():  # make sure nothing is in front of pawn
+                    if empty_between_vertical(board, move[:2], move[2:]) and not self.move_causes_check():
+                        # make sure nothing is in front of pawn
                         return False
                     else:
                         return True
@@ -257,30 +269,30 @@ class ChessLogic:
                 if ecol != scol + 1 or ecol != scol - 1:  # if ending square is not 1 horizontal
                     return True
                 else:
-                    if empty_between_horizontal(self.board, move[:2], move[
-                                                                      2:]) and not self.move_causes_check():  # make sure nothing is in front of pawn
+                    if empty_between_horizontal(board, move[:2], move[2:]) and not self.move_causes_check():
+                        # make sure nothing is in front of pawn
                         return False
                     else:
                         return True
             if is_diagonal:
 
                 if ecol == scol + 1 and erow != erow - 1:  # bottom right
-                    if empty_between_diagonal(self.board, move[:2], move[
-                                                                    2:]) and not self.move_causes_check():  # make sure nothing is in front of pawn
+                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
+                        # make sure nothing is in front of pawn
                         return False
 
                 if ecol == scol - 1 and erow != erow - 1:  # bottom left
-                    if empty_between_diagonal(self.board, move[:2], move[
-                                                                    2:]) and not self.move_causes_check():  # make sure nothing is in front of pawn
+                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
+                        # make sure nothing is in front of pawn
                         return False
 
                 if ecol == scol + 1 and erow != erow - 1:  # top left
-                    if empty_between_diagonal(self.board, move[:2], move[
-                                                                    2:]) and not self.move_causes_check():  # make sure nothing is in front of pawn
+                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
+                        # make sure nothing is in front of pawn
                         return False
                 if ecol == scol + 1 and erow != erow + 1:  # top right
-                    if empty_between_diagonal(self.board, move[:2], move[
-                                                                    2:]) and not self.move_causes_check():  # make sure nothing is in front of pawn
+                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
+                        # make sure nothing is in front of pawn
                         return False
 
                 return True
