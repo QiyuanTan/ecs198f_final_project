@@ -157,8 +157,8 @@ class ChessLogic:
                 if erow != srow + 1 or erow != srow + 2:  # if ending square is not 1 or 2 spaces above start
                     return True
                 else:
-                    if empty_between_vertical(self.board, move[:2], move[
-                                                                    2:]) and not self.move_causes_check():  # make sure nothing is in front of pawn
+                    if empty_between_vertical(self.board, move[:2], move[2:]) and not self.move_causes_check():
+                        # make sure nothing is in front of pawn
                         return False
                     else:
                         return True
@@ -166,8 +166,8 @@ class ChessLogic:
                 if erow != srow + 1:  # if ending square is not 1 above
                     return True
                 else:
-                    if empty_between_vertical(self.board, move[:2], move[
-                                                                    2:]) and not self.move_causes_check():  # make sure nothing is in front of pawn
+                    if empty_between_vertical(self.board, move[:2], move[2:]) and not self.move_causes_check():
+                        # make sure nothing is in front of pawn
                         return False
                     else:
                         return True
@@ -225,15 +225,15 @@ class ChessLogic:
             if not (is_horizontal and is_diagonal and is_vertical):
                 return True
             if is_horizontal:
-                if empty_between_horizontal(move[0:2], move[2:]) and not self.move_causes_check():
+                if empty_between_horizontal(self.board, move[0:2], move[2:]) and not self.move_causes_check():
                     return False
 
             if is_vertical:
-                if empty_between_vertical(move[0:2], move[2:]) and not self.move_causes_check():
+                if empty_between_vertical(self.board, move[0:2], move[2:]) and not self.move_causes_check():
                     return False
 
             if is_diagonal:
-                if empty_between_diagonal(move[0:2], move[2:]) and not self.move_causes_check():
+                if empty_between_diagonal(self.board, move[0:2], move[2:]) and not self.move_causes_check():
                     return False
 
             return True
