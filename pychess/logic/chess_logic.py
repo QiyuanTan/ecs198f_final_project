@@ -82,7 +82,7 @@ class ChessLogic:
             return self.promotion.handle(self.board, move)
 
         # determine if the game is over
-        self.result = self._game_over()
+        # self.result = self._game_over()
 
         # switch the move
         self.turn = 'w' if self.turn == 'b' else 'b'
@@ -99,7 +99,7 @@ class ChessLogic:
         return starting_piece == '' or (self.turn == 'w' and starting_piece.islower()) or (
                     self.turn == 'b' and starting_piece.isupper())
 
-    def move_causes_check():
+    def move_causes_check(self):
         pass
 
     def _invalid_move(self, move) -> bool:
@@ -110,30 +110,31 @@ class ChessLogic:
             Returns:
                 True if move is invalid, else False
         """
-        # check if destination is valid
-        # get the piece
-        cur_piece: str = get_piece(self.board, move[:2])
-        # validate piece
-        if self._invalid_starting_piece(cur_piece):
-            return True
+        # # check if destination is valid
+        # # get the piece
+        # cur_piece: str = get_piece(self.board, move[:2])
+        # # validate piece
+        # if self._invalid_starting_piece(cur_piece):
+        #     return True
+        #
+        # # check if destination is in its path, if not return false
+        # if self.turn == 'w':
+        #     # return invalid_move_for_white(move, cur_piece)
+        #     print('whites turn')
+        # # return invalid_move_for_black(move, cur_piece)
+        #
+        # pass
+        return self.invalid_move(self.board, move, self.turn)
 
-        # check if destination is in its path, if not return false
-        if self.turn == 'w':
-            # return invalid_move_for_white(move, cur_piece)
-            print('whites turn')
-        # return invalid_move_for_black(move, cur_piece)
-
-        pass
-
-    def invalid_move(self, board, move, piece, side) -> bool:
+    def invalid_move(self, board, move, side) -> bool:
         """
             Function to check if move is valid for white
             Args:
                 move: the move that the player is making
-                piece: the current piece selected
             Returns:
                 True if move is invalid, else False
         """
+        piece = get_piece(board, move[2:])
         # set side
         to_self = lambda p: p.upper() if side == 'w' else p.lower()
         is_self = lambda p: p.isupper() if side == 'w' else p.islower()
