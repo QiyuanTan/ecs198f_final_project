@@ -66,15 +66,18 @@ class ChessLogic:
         # handle special moves
         if self.castling.applies(self.board, move):
             print("castling")
-            return self.castling.handle(self.board, move)
+            result = self.castling.handle(self.board, move)
         elif self.en_passant.applies(self.board, move):
             print("en passant")
             return self.en_passant.handle(self.board, move)
-
-        # handle normal moves
-        if self._invalid_move(move):
-            print("Invalid move")
-            return ""
+        else:
+            # handle normal moves
+            if self._invalid_move(move):
+                print("Invalid move")
+                return ""
+            # move the piece
+            print("normal move")
+            result = self._handle_move_capture(starting, ending)
 
         if starting_piece == 'k':
             self.black_king_index = str2index(ending)
@@ -87,10 +90,6 @@ class ChessLogic:
         if starting_piece == 'R':
             self.castling.white_castling_allowed = False
         self.en_passant.last_move = move
-
-        # move the piece
-        print("normal move")
-        result = self._handle_move_capture(starting, ending)
 
         if self.promotion.applies(self.board, move):
             print("promotion")
