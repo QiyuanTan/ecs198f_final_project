@@ -306,7 +306,7 @@ def invalid_move_for_piece(board, move, side) -> bool:
                 return True
 
         if srow == pawn_base:  # this means its at the starting row i.e "e2,a2"
-            if erow != srow + delta or erow != srow + 2 * delta:  # if ending square is not 1 or 2 spaces above start
+            if erow != srow + delta and erow != srow + 2 * delta:  # if ending square is not 1 or 2 spaces above start
                 return True
             else:
                 if empty_between_vertical(board, move[:2], move[2:]):

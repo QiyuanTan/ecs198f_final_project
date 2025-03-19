@@ -67,25 +67,32 @@ class ChessLogic:
 
         # handle special moves
         if self.castling.applies(self.board, move):
+            print("castling")
             return self.castling.handle(self.board, move)
         elif self.en_passant.applies(self.board, move):
+            print("en passant")
             return self.en_passant.handle(self.board, move)
 
         # handle normal moves
         if self._invalid_move(move):
+            print("Invalid move")
             return ""
 
+        # TODO: update castling and en passant, and king index
+
         # move the piece
+        print("normal move")
         result = self._handle_move_capture(starting, ending)
 
         if self.promotion.applies(self.board, move):
+            print("promotion")
             return self.promotion.handle(self.board, move)
-
-        # determine if the game is over
-        # self.result = self._game_over()
 
         # switch the move
         self.turn = 'w' if self.turn == 'b' else 'b'
+
+        # determine if the game is over
+        self.result = self._game_over()
 
         print(result)
         return result
@@ -141,12 +148,21 @@ class ChessLogic:
         # check to make sure you're not moving on top of another white piece
         dest_piece = get_piece(board, move[2:])
         if is_self(dest_piece):
+            print("moving on top of another piece")
             return True
 
-        return invalid_move_for_piece(board, move, side) or self.move_causes_check(move, side)
+        causes_check = self.move_causes_check(move, side)
+        invalid_move = invalid_move_for_piece(board, move, side)
+
+        if causes_check:
+            print("causes check")
+        if invalid_move:
+            print("invalid move for piece")
+
+        return causes_check or invalid_move
 
     def _handle_move_capture(self, starting, ending):
-        chess_notation = (f"{get_piece(self.board, starting) if get_piece(self.board, starting).lower != 'p' else ''}"
+        chess_notation = (f"{get_piece(self.board, starting) if get_piece(self.board, starting).lower() != 'p' else ''}"
                           f"{starting}"
                           f"{'x' if get_piece(self.board, ending) != '' else ''}"
                           f"{ending}")
@@ -199,10 +215,11 @@ class ChessLogic:
                 '' - Game In Progress
         """
         is_king_checked = self.white_king_checked(self.board) if self.turn == 'w' else self.black_king_checked(self.board)
-        have_valid_moves = not self._no_valid_moves("w" if self.turn == 'b' else 'b')
-        if is_king_checked and not have_valid_moves:
+        no_valid_moves = self._no_valid_moves(self.turn)
+        print(f'{self.turn}: is_king_checked: {is_king_checked}, no_valid_moves: {no_valid_moves}')
+        if is_king_checked and no_valid_moves:
             return 'w' if self.turn == 'b' else 'b'
-        elif not is_king_checked and not have_valid_moves:
+        elif (not is_king_checked) and no_valid_moves:
             return 'd'
         return ''
 
@@ -241,7 +258,4 @@ class ChessLogic:
                     if not self.invalid_move(self.board, index2str((i, j)) + index2str(move), side):
                         return False
 
-                return True
-
-        # unhandled
-        raise Exception("Unhandled piece")
+        return True
