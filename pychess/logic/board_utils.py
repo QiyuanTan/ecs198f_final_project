@@ -189,14 +189,14 @@ def is_square_attacked(board, square, color):
 
     Args:
         board (list): The chessboard.
-        square (str): The square to check (e.g., "e1").
+        square (str) or (tuple): The square to check (e.g., "e1", (1, 1)).
         color (str): The color of the player ("w" or "b").
 
     Returns:
         bool: True if the square is attacked, False otherwise.
     """
     opponent_color = "b" if color == "w" else "w"
-    row, col = 8 - int(square[1]), ord(square[0]) - ord('a')
+    row, col = str2index(square)
 
     # Check for pawn attacks
     pawn_row_offset = -1 if opponent_color == "w" else 1
@@ -248,3 +248,175 @@ def is_square_attacked(board, square, color):
             return True
 
     return False  # Square is not under attack
+
+def invalid_move_for_piece(board, move, side) -> bool:
+    """
+        Function to check if move is valid for white
+        Args:
+            board:
+            side:
+            move: the move that the player is making
+        Returns:
+            True if move is invalid, else False
+    """
+    piece = get_piece(board, move[2:])
+    # set side
+    to_self = lambda p: p.upper() if side == 'w' else p.lower()
+    is_self = lambda p: p.isupper() if side == 'w' else p.islower()
+    delta = -1 if side == 'w' else 1
+    pawn_base = 6 if side == 'w' else 1
+
+    # check if pieces blocking it, if not return false
+    # check if causing a check, if so then return false TBD ADD SOON
+    # else return true
+    # ex move: e2e3
+    is_horizontal = is_horizontal_move(move[:2], move[2:])
+    is_diagonal = is_diagonal_move(move[:2], move[2:])
+    is_vertical = is_vertical_move(move[:2], move[2:])
+    srow, scol = str2index(move[:2])
+    erow, ecol = str2index(move[2:])
+
+    if piece == to_self("P"):  # if the piece is a pawn
+
+        if not is_vertical:
+            return True
+
+        if is_diagonal:
+            if erow == srow + delta and get_piece(board, move[:2]) != '':
+                return False
+            else:
+                return True
+
+        if srow == pawn_base:  # this means its at the starting row i.e "e2,a2"
+            if erow != srow + delta or erow != srow + 2 * delta:  # if ending square is not 1 or 2 spaces above start
+                return True
+            else:
+                if empty_between_vertical(board, move[:2], move[2:]):
+                    # make sure nothing is in front of pawn
+                    return False
+                else:
+                    return True
+        else:
+            if erow != srow + delta:  # if ending square is not 1 above
+                return True
+            else:
+                if empty_between_vertical(board, move[:2], move[2:]):
+                    # make sure nothing is in front of pawn
+                    return False
+                else:
+                    return True
+    elif piece == to_self("R"):
+        if is_diagonal:
+            return True
+        if is_horizontal:
+            if empty_between_horizontal(board, move[0:2], move[2:0]):
+                return False
+            else:
+                return True
+        if is_vertical:
+            if empty_between_vertical(board, move[0:2], move[2:0]):
+                return False
+            else:
+                return True
+    elif piece == to_self("B"):
+        if not is_diagonal:
+            return True
+
+        if empty_between_diagonal(board, move[0:2], move[2:0]):
+            return False
+        else:
+            return True
+    elif piece == to_self("N"):
+        if is_vertical or is_horizontal or is_diagonal:
+            return True
+
+        if erow == srow + 2 and ecol == scol + 1:  # up two, one right
+            return False
+
+        if erow == srow + 2 and ecol == scol - 1:  # up two, one left
+            return False
+
+        if erow == srow - 2 and ecol == scol - 1:  # down two, one left
+            return False
+
+        if erow == srow - 2 and ecol == scol + 1:  # up two, one right
+            return False
+
+        if erow == srow + 1 and ecol == scol + 2:  # up one two right
+            return False
+
+        if erow == srow + 1 and ecol == scol - 2:  # up one two left
+            return False
+
+        if erow == srow - 1 and ecol == scol + 2:  # down one two right
+            return False
+
+        if erow == srow - 1 and ecol == scol - 2:  # down one two left
+            return False
+
+        return True
+    elif piece == to_self("Q"):
+        if not (is_horizontal and is_diagonal and is_vertical):
+            return True
+        if is_horizontal:
+            if empty_between_horizontal(board, move[0:2], move[2:]):
+                return False
+
+        if is_vertical:
+            if empty_between_vertical(board, move[0:2], move[2:]):
+                return False
+
+        if is_diagonal:
+            if empty_between_diagonal(board, move[0:2], move[2:]):
+                return False
+
+        return True
+    else:
+        if not (is_horizontal and is_diagonal and is_vertical):
+            return True
+
+        if is_vertical:
+
+            if erow != srow + 1 or erow != srow - 1:  # if ending square is not 1 vertical
+                return True
+            else:
+                if empty_between_vertical(board, move[:2], move[2:]):
+                    # make sure nothing is in front of pawn
+                    return False
+                else:
+                    return True
+
+        if is_horizontal:
+
+            if ecol != scol + 1 or ecol != scol - 1:  # if ending square is not 1 horizontal
+                return True
+            else:
+                if empty_between_horizontal(board, move[:2], move[2:]):
+                    # make sure nothing is in front of pawn
+                    return False
+                else:
+                    return True
+        if is_diagonal:
+
+            if ecol == scol + 1 and erow != erow - 1:  # bottom right
+                if empty_between_diagonal(board, move[:2], move[2:]):
+                    # make sure nothing is in front of pawn
+                    return False
+
+            if ecol == scol - 1 and erow != erow - 1:  # bottom left
+                if empty_between_diagonal(board, move[:2], move[2:]):
+                    # make sure nothing is in front of pawn
+                    return False
+
+            if ecol == scol + 1 and erow != erow - 1:  # top left
+                if empty_between_diagonal(board, move[:2], move[2:]):
+                    # make sure nothing is in front of pawn
+                    return False
+            if ecol == scol + 1 and erow != erow + 1:  # top right
+                if empty_between_diagonal(board, move[:2], move[2:]):
+                    # make sure nothing is in front of pawn
+                    return False
+
+            return True
+
+    raise ValueError("Move not handled")

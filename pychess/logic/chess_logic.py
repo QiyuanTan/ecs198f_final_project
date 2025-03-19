@@ -1,5 +1,8 @@
+import copy
+
 from pychess.logic.board_utils import *
 from pychess.logic.special_moves import Castling, EnPassant, Promotion
+from pychess.main import board
 
 
 class ChessLogic:
@@ -99,8 +102,18 @@ class ChessLogic:
         return starting_piece == '' or (self.turn == 'w' and starting_piece.islower()) or (
                     self.turn == 'b' and starting_piece.isupper())
 
-    def move_causes_check(self):
-        pass
+    def move_causes_check(self, move, side):
+        """
+            Function to check if move causes a check
+            Args:
+                side: the side that is making the move
+                move: the move that the player is making
+            Returns:
+                True if move causes a check, else False
+        """
+        board = copy.deepcopy(self.board)
+        move_piece(board, move[:2], move[2:])
+        return is_square_attacked(board, self.white_king_index if side == 'w' else self.black_king_index, side)
 
     def _invalid_move(self, move) -> bool:
         """
@@ -110,202 +123,34 @@ class ChessLogic:
             Returns:
                 True if move is invalid, else False
         """
-        # # check if destination is valid
-        # # get the piece
-        # cur_piece: str = get_piece(self.board, move[:2])
-        # # validate piece
-        # if self._invalid_starting_piece(cur_piece):
-        #     return True
-        #
-        # # check if destination is in its path, if not return false
-        # if self.turn == 'w':
-        #     # return invalid_move_for_white(move, cur_piece)
-        #     print('whites turn')
-        # # return invalid_move_for_black(move, cur_piece)
-        #
-        # pass
         return self.invalid_move(self.board, move, self.turn)
 
     def invalid_move(self, board, move, side) -> bool:
         """
             Function to check if move is valid for white
             Args:
+                board:
+                side:
                 move: the move that the player is making
             Returns:
                 True if move is invalid, else False
         """
-        piece = get_piece(board, move[2:])
         # set side
-        to_self = lambda p: p.upper() if side == 'w' else p.lower()
         is_self = lambda p: p.isupper() if side == 'w' else p.islower()
-        delta = -1 if side == 'w' else 1
-        pawn_base = 6 if side == 'w' else 1
 
-        # check to make sure youre not moving on top of another white piece
+        # check to make sure you're not moving on top of another white piece
         dest_piece = get_piece(board, move[2:])
         if is_self(dest_piece):
             return True
-        # check if pieces blocking it, if not return false
-        # check if causing a check, if so then return false TBD ADD SOON
-        # else return true
-        # ex move: e2e3
-        is_horizontal = is_horizontal_move(move[:2], move[2:])
-        is_diagonal = is_diagonal_move(move[:2], move[2:])
-        is_vertical = is_vertical_move(move[:2], move[2:])
-        srow, scol = str2index(move[:2])
-        erow, ecol = str2index(move[2:])
 
-        if piece == to_self("P"):  # if the piece is a pawn
-
-            if not is_vertical:
-                return True
-
-            if is_diagonal:
-                if erow == srow + delta and get_piece(board, move[:2]) != '':
-                    return False
-                else:
-                    return True
-
-            if srow == pawn_base:  # this means its at the starting row i.e "e2,a2"
-                if erow != srow + delta or erow != srow + 2 * delta:  # if ending square is not 1 or 2 spaces above start
-                    return True
-                else:
-                    if empty_between_vertical(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-                    else:
-                        return True
-            else:
-                if erow != srow + delta:  # if ending square is not 1 above
-                    return True
-                else:
-                    if empty_between_vertical(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-                    else:
-                        return True
-        elif piece == to_self("R"):
-            if is_diagonal:
-                return True
-            if is_horizontal:
-                if empty_between_horizontal(board, move[0:2], move[2:0]) and not self.move_causes_check():
-                    return False
-                else:
-                    return True
-            if is_vertical:
-                if empty_between_vertical(board, move[0:2], move[2:0]) and not self.move_causes_check():
-                    return False
-                else:
-                    return True
-        elif piece == to_self("B"):
-            if not is_diagonal:
-                return True
-
-            if empty_between_diagonal(board, move[0:2], move[2:0]) and not self.move_causes_check():
-                return False
-            else:
-                return True
-        elif piece == to_self("N"):
-            if is_vertical or is_horizontal or is_diagonal:
-                return True
-
-            if erow == srow + 2 and ecol == scol + 1 and not self.move_causes_check():  # up two, one right
-                return False
-
-            if erow == srow + 2 and ecol == scol - 1 and not self.move_causes_check():  # up two, one left
-                return False
-
-            if erow == srow - 2 and ecol == scol - 1 and not self.move_causes_check():  # down two, one left
-                return False
-
-            if erow == srow - 2 and ecol == scol + 1 and not self.move_causes_check():  # up two, one right
-                return False
-
-            if erow == srow + 1 and ecol == scol + 2 and not self.move_causes_check():  # up one two right
-                return False
-
-            if erow == srow + 1 and ecol == scol - 2 and not self.move_causes_check():  # up one two left
-                return False
-
-            if erow == srow - 1 and ecol == scol + 2 and not self.move_causes_check():  # down one two right
-                return False
-
-            if erow == srow - 1 and ecol == scol - 2 and not self.move_causes_check():  # down one two left
-                return False
-
-            return True
-        elif piece == to_self("Q"):
-            if not (is_horizontal and is_diagonal and is_vertical):
-                return True
-            if is_horizontal:
-                if empty_between_horizontal(board, move[0:2], move[2:]) and not self.move_causes_check():
-                    return False
-
-            if is_vertical:
-                if empty_between_vertical(board, move[0:2], move[2:]) and not self.move_causes_check():
-                    return False
-
-            if is_diagonal:
-                if empty_between_diagonal(board, move[0:2], move[2:]) and not self.move_causes_check():
-                    return False
-
-            return True
-        else:
-            if not (is_horizontal and is_diagonal and is_vertical):
-                return True
-
-            if is_vertical:
-
-                if erow != srow + 1 or erow != srow - 1:  # if ending square is not 1 vertical
-                    return True
-                else:
-                    if empty_between_vertical(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-                    else:
-                        return True
-
-            if is_horizontal:
-
-                if ecol != scol + 1 or ecol != scol - 1:  # if ending square is not 1 horizontal
-                    return True
-                else:
-                    if empty_between_horizontal(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-                    else:
-                        return True
-            if is_diagonal:
-
-                if ecol == scol + 1 and erow != erow - 1:  # bottom right
-                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-
-                if ecol == scol - 1 and erow != erow - 1:  # bottom left
-                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-
-                if ecol == scol + 1 and erow != erow - 1:  # top left
-                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-                if ecol == scol + 1 and erow != erow + 1:  # top right
-                    if empty_between_diagonal(board, move[:2], move[2:]) and not self.move_causes_check():
-                        # make sure nothing is in front of pawn
-                        return False
-
-                return True
-
-        raise ValueError("Move not handled")
+        return invalid_move_for_piece(board, move, side) or self.move_causes_check(move, side)
 
     def _handle_move_capture(self, starting, ending):
         chess_notation = (f"{get_piece(self.board, starting) if get_piece(self.board, starting).lower != 'p' else ''}"
                           f"{starting}"
                           f"{'x' if get_piece(self.board, ending) != '' else ''}"
                           f"{ending}")
-        self.board = move_piece(self.board, starting, ending)
+        move_piece(self.board, starting, ending)
         return chess_notation
 
     def white_king_checked(self, board) -> bool:
