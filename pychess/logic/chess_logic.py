@@ -1,9 +1,6 @@
 import copy
-
 from pychess.logic.board_utils import *
 from pychess.logic.special_moves import Castling, EnPassant, Promotion
-from pychess.main import board
-
 
 class ChessLogic:
     def __init__(self):
@@ -138,6 +135,9 @@ class ChessLogic:
         # set side
         is_self = lambda p: p.isupper() if side == 'w' else p.islower()
 
+        if self.castling.applies(board, move) or self.en_passant.applies(board, move):
+            return False
+
         # check to make sure you're not moving on top of another white piece
         dest_piece = get_piece(board, move[2:])
         if is_self(dest_piece):
@@ -198,9 +198,50 @@ class ChessLogic:
 
                 '' - Game In Progress
         """
-        if self.check_king_path_for_check(self.board):
+        is_king_checked = self.white_king_checked(self.board) if self.turn == 'w' else self.black_king_checked(self.board)
+        have_valid_moves = not self._no_valid_moves("w" if self.turn == 'b' else 'b')
+        if is_king_checked and not have_valid_moves:
             return 'w' if self.turn == 'b' else 'b'
-        elif self._stalemate():
+        elif not is_king_checked and not have_valid_moves:
             return 'd'
-        else:
-            return ''
+        return ''
+
+    def _no_valid_moves(self, side):
+        """
+        Function to check if there are no valid moves for a side
+        Args:
+            side: The side to check for
+        Returns:
+            True if there are no valid moves, else False
+        """
+        is_self = lambda p: p.isupper() if side == 'w' else p.islower()
+        for i in range(8):
+            for j in range(8):
+                piece = self.board[i][j]
+                if piece == "" or not is_self(piece):
+                    continue
+
+                piece = piece.lower()
+                if piece == 'p':
+                    move_set = pawn_moves(self.board, i, j, side)
+                elif piece == 'r':
+                    move_set = rook_moves(self.board, i, j, side)
+                elif piece == 'n':
+                    move_set = knight_moves(self.board, i, j, side)
+                elif piece == 'b':
+                    move_set = bishop_moves(self.board, i, j, side)
+                elif piece == 'q':
+                    move_set = queen_moves(self.board, i, j, side)
+                elif piece == 'k':
+                    move_set = king_moves(self.board, i, j, side)
+                else:
+                    raise Exception("Unhandled piece")
+
+                for move in move_set:
+                    if not self.invalid_move(self.board, index2str((i, j)) + index2str(move), side):
+                        return False
+
+                return True
+
+        # unhandled
+        raise Exception("Unhandled piece")

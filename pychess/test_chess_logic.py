@@ -352,3 +352,47 @@ def test_invalid_starting_piece(piece, turn, expected):
     logic = ChessLogic()
     logic.turn = turn
     assert logic._invalid_starting_piece(piece) == expected
+
+def test_no_valid_moves():
+    logic = ChessLogic()
+    logic.black_king_index = (4, 3)
+    logic.board = [
+        ['','','','R','','','',''],
+        ['','','','','','','',''],
+        ['','B','','r','','B','',''],
+        ['','','','','','','',''],
+        ['','R','','k','','','',''],
+        ['','R','','','','','',''],
+        ['','','','','','','',''],
+        ['','','','','','','','']
+    ]
+    assert logic._no_valid_moves('b') == True
+
+    logic.board = [
+        ['','' ,'','','','','',''],
+        ['','K','','R','','K','',''],
+        ['','' ,'','r','','','',''],
+        ['','', '','','','','',''],
+        ['','', '','k','','','',''],
+        ['','R','','','','','',''],
+        ['','', '','','','','',''],
+        ['','', 'R','','R','','','']
+    ]
+    assert logic._no_valid_moves('b') == False
+
+
+def test_invalid_move():
+    logic = ChessLogic()
+    logic.board = [
+        ['','' ,'','','','','',''],
+        ['','K','','R','','K','',''],
+        ['','' ,'','r','','','',''],
+        ['','', '','','','','',''],
+        ['','', '','k','','','',''],
+        ['','R','','','','','',''],
+        ['','', '','','','','',''],
+        ['','', 'R','','R','','','']
+    ]
+    logic.black_king_index = (4, 3)
+    assert logic.invalid_move(logic.board, 'd6d5', 'b') == False
+    assert logic.invalid_move(logic.board, 'd6d7', 'b') == False

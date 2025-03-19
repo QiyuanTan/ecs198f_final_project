@@ -18,7 +18,7 @@ def str2index(square) -> tuple:
     Returns: a tuple of the row and column index
 
     """
-    if square is tuple:
+    if isinstance(square, tuple):
         return square
 
     try:
@@ -27,6 +27,25 @@ def str2index(square) -> tuple:
         return row, col
     except (TypeError, IndexError):
         raise TypeError("Invalid square format. Must be a string in algebraic notation (e.g. 'e2')")
+
+def index2str(index) -> str:
+    """
+    Function to convert board index to algebraic notation
+    Args:
+        index: tuple of the row and column index
+
+    Returns: a string notation of the square (e.g. 'e2')
+
+    """
+    if isinstance(index, str):
+        return index
+
+    try:
+        col = chr(index[1] + ord('a'))
+        row = str(8 - index[0])
+        return col + row
+    except (TypeError, IndexError):
+        raise TypeError("Invalid index format. Must be a tuple of the row and column index")
 
 def move_piece(board, start, end):
     """
@@ -259,10 +278,9 @@ def invalid_move_for_piece(board, move, side) -> bool:
         Returns:
             True if move is invalid, else False
     """
-    piece = get_piece(board, move[2:])
+    piece = get_piece(board, move[:2])
     # set side
     to_self = lambda p: p.upper() if side == 'w' else p.lower()
-    is_self = lambda p: p.isupper() if side == 'w' else p.islower()
     delta = -1 if side == 'w' else 1
     pawn_base = 6 if side == 'w' else 1
 
@@ -309,12 +327,12 @@ def invalid_move_for_piece(board, move, side) -> bool:
         if is_diagonal:
             return True
         if is_horizontal:
-            if empty_between_horizontal(board, move[0:2], move[2:0]):
+            if empty_between_horizontal(board, move[:2], move[2:]):
                 return False
             else:
                 return True
         if is_vertical:
-            if empty_between_vertical(board, move[0:2], move[2:0]):
+            if empty_between_vertical(board, move[:2], move[2:]):
                 return False
             else:
                 return True
@@ -322,7 +340,7 @@ def invalid_move_for_piece(board, move, side) -> bool:
         if not is_diagonal:
             return True
 
-        if empty_between_diagonal(board, move[0:2], move[2:0]):
+        if empty_between_diagonal(board, move[:2], move[2:]):
             return False
         else:
             return True
@@ -359,15 +377,15 @@ def invalid_move_for_piece(board, move, side) -> bool:
         if not (is_horizontal and is_diagonal and is_vertical):
             return True
         if is_horizontal:
-            if empty_between_horizontal(board, move[0:2], move[2:]):
+            if empty_between_horizontal(board, move[:2], move[2:]):
                 return False
 
         if is_vertical:
-            if empty_between_vertical(board, move[0:2], move[2:]):
+            if empty_between_vertical(board, move[:2], move[2:]):
                 return False
 
         if is_diagonal:
-            if empty_between_diagonal(board, move[0:2], move[2:]):
+            if empty_between_diagonal(board, move[:2], move[2:]):
                 return False
 
         return True
@@ -420,3 +438,138 @@ def invalid_move_for_piece(board, move, side) -> bool:
             return True
 
     raise ValueError("Move not handled")
+
+def pawn_moves(board, i, j, side) -> list[tuple[int, int]]:
+    """
+    Gets the possible moves for a pawn
+    Args:
+        board:
+        i:
+        j:
+        side:
+
+    Returns:
+    """
+    moves = []
+    direction = -1 if side == 'w' else 1
+    # move one square forward
+    if board[i + direction][j] == '':
+        moves.append((i + direction, j))
+        # move two squares forward
+        if (i == 1 and side == 'b') or (i == 6 and side == 'w'):
+            if board[i + 2 * direction][j] == '':
+                moves.append((i + 2 * direction, j))
+    # capture diagonally
+    if j > 0:
+        moves.append((i + direction, j - 1))
+    if j < 7:
+        moves.append((i + direction, j + 1))
+    return moves
+
+def rook_moves(board, i, j, side) -> list[tuple[int, int]]:
+    """
+    Gets the possible moves for a rook
+    Args:
+        board:
+        i:
+        j:
+        side:
+
+    Returns:
+    """
+    moves = []
+    for direction in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+        for k in range(1, 8):
+            new_i = i + k * direction[0]
+            new_j = j + k * direction[1]
+            if not (0 <= new_i < 8 and 0 <= new_j < 8):
+                break
+            if board[new_i][new_j] == '':
+                moves.append((new_i, new_j))
+            elif board[new_i][new_j].isupper() != side.isupper():
+                moves.append((new_i, new_j))
+                break
+            else:
+                break
+    return moves
+
+def knight_moves(board, i, j, side) -> list[tuple[int, int]]:
+    """
+    Gets the possible moves for a knight
+    Args:
+        board:
+        i:
+        j:
+        side:
+
+    Returns:
+    """
+    moves = []
+    for direction in [(1, 2), (2, 1), (-1, 2), (-2, 1), (1, -2), (2, -1), (-1, -2), (-2, -1)]:
+        new_i = i + direction[0]
+        new_j = j + direction[1]
+        if 0 <= new_i < 8 and 0 <= new_j < 8:
+            if board[new_i][new_j] == '' or board[new_i][new_j].isupper() != side.isupper():
+                moves.append((new_i, new_j))
+    return moves
+
+def bishop_moves(board, i, j, side) -> list[tuple[int, int]]:
+    """
+    Gets the possible moves for a bishop
+    Args:
+        board:
+        i:
+        j:
+        side:
+
+    Returns:
+    """
+    moves = []
+    for direction in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:
+        for k in range(1, 8):
+            new_i = i + k * direction[0]
+            new_j = j + k * direction[1]
+            if not (0 <= new_i < 8 and 0 <= new_j < 8):
+                break
+            if board[new_i][new_j] == '':
+                moves.append((new_i, new_j))
+            elif board[new_i][new_j].isupper() != side.isupper():
+                moves.append((new_i, new_j))
+                break
+            else:
+                break
+    return moves
+
+def queen_moves(board, i, j, side) -> list[tuple[int, int]]:
+    """
+    Gets the possible moves for a queen
+    Args:
+        board:
+        i:
+        j:
+        side:
+
+    Returns:
+    """
+    moves = rook_moves(board, i, j, side) + bishop_moves(board, i, j, side)
+    return moves
+
+def king_moves(board, i, j, side) -> list[tuple[int, int]]:
+    """
+    Gets the possible moves for a king
+    Args:
+        board:
+        i:
+        j:
+        side:
+
+    Returns:
+    """
+    moves = []
+    for direction in [(1, 1), (1, -1), (-1, 1), (-1, -1), (1, 0), (-1, 0), (0, 1), (0, -1)]:
+        new_i = i + direction[0]
+        new_j = j + direction[1]
+        if 0 <= new_i < 8 and 0 <= new_j < 8:
+            if board[new_i][new_j] == '' or board[new_i][new_j].isupper() != side.isupper():
+                moves.append((new_i, new_j))
+    return moves
