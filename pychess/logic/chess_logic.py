@@ -38,8 +38,6 @@ class ChessLogic:
         self.castling = Castling()
         self.en_passant = EnPassant()
         self.promotion = Promotion()
-        self.white_king_moved = False
-        self.black_king_moved = False
         self.white_king_index = (7, 4)
         self.black_king_index = (0, 4)
 
@@ -78,7 +76,17 @@ class ChessLogic:
             print("Invalid move")
             return ""
 
-        # TODO: update castling and en passant, and king index
+        if starting_piece == 'k':
+            self.black_king_index = str2index(ending)
+            self.castling.back_castling_allowed = False
+        if starting_piece == 'K':
+            self.white_king_index = str2index(ending)
+            self.castling.white_castling_allowed = False
+        if starting_piece == 'r':
+            self.castling.back_castling_allowed = False
+        if starting_piece == 'R':
+            self.castling.white_castling_allowed = False
+        self.en_passant.last_move = move
 
         # move the piece
         print("normal move")
@@ -162,7 +170,7 @@ class ChessLogic:
         return causes_check or invalid_move
 
     def _handle_move_capture(self, starting, ending):
-        chess_notation = (f"{get_piece(self.board, starting) if get_piece(self.board, starting).lower() != 'p' else ''}"
+        chess_notation = (f"{get_piece(self.board, starting).lower() if get_piece(self.board, starting).lower() != 'p' else ''}"
                           f"{starting}"
                           f"{'x' if get_piece(self.board, ending) != '' else ''}"
                           f"{ending}")
