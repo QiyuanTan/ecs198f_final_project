@@ -99,7 +99,7 @@ class ChessLogic:
 
         if self.promotion.applies(self.board, move):
             print("promotion")
-            return self.promotion.handle(self.board, move)
+            result =  self.promotion.handle(self.board, move)
 
         # determine if the game is over
         self.result = self._game_over()

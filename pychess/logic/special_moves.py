@@ -113,12 +113,10 @@ class EnPassant(MoveHandler):
 
 class Promotion(MoveHandler):
     def applies(self, board, move):
-        return (move[1] == "7" and move[3] == "8" and board[1][ord(move[0]) - ord('a')].lower() == "p") or \
-                (move[1] == "2" and move[3] == "1" and board[6][ord(move[0]) - ord('a')].lower() == "P")
+        return (move[1] == "7" and move[3] == "8" and get_piece(board, move[2:]) == "P") or \
+                (move[1] == "2" and move[3] == "1" and get_piece(board, move[2:]) == "p")
 
     def handle(self, board, move):
-        # end_col, end_row = ord(move[2]) - ord('a'), 8 - int(move[3])
-        # board[end_row][end_col] = "Q" if board[end_row][end_col].isupper() else "q"
-        # return f"{move}=Q"
-        color = 'Q' if get_piece(board, move[2:]) == 'P' else 'q'
-        return f"{move}={color}"
+        end_col, end_row = ord(move[2]) - ord('a'), 8 - int(move[3])
+        board[end_row][end_col] = "Q" if board[end_row][end_col].isupper() else "q"
+        return f"{move}=Q"
