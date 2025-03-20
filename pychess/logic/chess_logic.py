@@ -58,6 +58,9 @@ class ChessLogic:
         starting_piece = get_piece(self.board, starting)
         ending_piece = get_piece(self.board, ending)
 
+        print(f'{self.turn}\'s turn')
+        print(self.en_passant.last_move)
+
         # skip if the starting piece is invalid
         if self._invalid_starting_piece(starting_piece):
             print("Invalid starting square")
@@ -69,7 +72,7 @@ class ChessLogic:
             result = self.castling.handle(self.board, move)
         elif self.en_passant.applies(self.board, move):
             print("en passant")
-            return self.en_passant.handle(self.board, move)
+            result =  self.en_passant.handle(self.board, move)
         else:
             # handle normal moves
             if self._invalid_move(move):
@@ -91,12 +94,12 @@ class ChessLogic:
             self.castling.white_castling_allowed = False
         self.en_passant.last_move = move
 
+        # switch the move
+        self.turn = 'w' if self.turn == 'b' else 'b'
+
         if self.promotion.applies(self.board, move):
             print("promotion")
             return self.promotion.handle(self.board, move)
-
-        # switch the move
-        self.turn = 'w' if self.turn == 'b' else 'b'
 
         # determine if the game is over
         self.result = self._game_over()

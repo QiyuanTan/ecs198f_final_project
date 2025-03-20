@@ -85,10 +85,10 @@ class EnPassant(MoveHandler):
             last_end_col, last_end_row = ord(last_end[0]) - ord('a'), 8 - int(last_end[1])
 
             # Opponent's pawn must have moved two squares forward to be capturable
-            if (last_start_row == (6 if piece == "p" else 1) and 
-                last_end_row == (4 if piece == "p" else 3) and 
-                last_start_col == last_end_col and 
-                last_end_col == end_col):
+            if ((last_start_row == (6 if piece == "p" else 1) and
+                last_end_row == (4 if piece == "p" else 3) and
+                last_end_col == end_col) and
+                get_piece(board, last_end).upper() == "P"):
 
                 return True
 
