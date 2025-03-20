@@ -116,6 +116,8 @@ class Promotion(MoveHandler):
         return move[1] == "7" and move[3] == "8" and board[1][ord(move[0]) - ord('a')].lower() == "p"
 
     def handle(self, board, move):
-        end_col, end_row = ord(move[2]) - ord('a'), 8 - int(move[3])
-        board[end_row][end_col] = "Q" if board[end_row][end_col].isupper() else "q"
-        return f"{move}=Q"
+        # end_col, end_row = ord(move[2]) - ord('a'), 8 - int(move[3])
+        # board[end_row][end_col] = "Q" if board[end_row][end_col].isupper() else "q"
+        # return f"{move}=Q"
+        color = 'Q' if get_piece(board, move[2:]) == 'P' else 'q'
+        return f"{move}={color}"

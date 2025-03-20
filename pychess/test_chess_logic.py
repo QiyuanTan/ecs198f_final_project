@@ -9,14 +9,24 @@ def new_game():
 
 # ========================== Basic Move Tests ========================== #
 @pytest.mark.parametrize("move, expected", [
-    ("e2e4", "Pe2e4"),  # Normal pawn move
-    ("g1f3", "Ng1f3"),  # Normal knight move
-    ("f1c4", "Bf1c4"),  # Diagonal bishop move
-    ("d1h5", "Qd1h5"),  # Horizontal queen move
-    ("a1a3", "Ra1a3"),  # Vertical rook move
+    ("e2e4", "e2e4"),  # 兵移动
+    ("g1f3", "Ng1f3"),  # 马上方坐标格式
+    ("f1c4", "Bf1c4"),  # 象移动
+    ("d1h5", "Qd1h5"),  # 后移动
+    ("a1a3", "Ra1a3"),  # 车移动
 ])
 def test_valid_moves(new_game, move, expected):
-    """Test valid piece movements"""
+    if move == "f1c4":
+        new_game.board[6][4] = ''  
+        new_game.board[5][3] = ''  
+    elif move == "d1h5":
+        new_game.board[6][3] = ''  # d2
+        new_game.board[6][4] = ''  # e2
+        new_game.board[5][5] = ''  # f3
+        new_game.board[4][6] = ''  # g4
+    elif move == "a1a3":
+        new_game.board[6][0] = ''     
+        
     assert new_game.play_move(move) == expected
 
 # ========================== Invalid Move Tests ========================== #

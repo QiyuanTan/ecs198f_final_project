@@ -226,6 +226,7 @@ def is_square_attacked(board, square, color):
             if piece.lower() == 'p' and piece.islower() == (opponent_color == "b"):
                 return True
 
+
     knight_moves = [(-2, -1), (-2, 1), (2, -1), (2, 1),
                     (-1, -2), (-1, 2), (1, -2), (1, 2)]
     for dr, dc in knight_moves:
@@ -246,7 +247,7 @@ def is_square_attacked(board, square, color):
             if piece:
                 if (piece.lower() in ['r', 'q']) and (piece.islower() == (opponent_color == "b")):
                     return True
-                break 
+                break  
 
     for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
         r, c = row, col
