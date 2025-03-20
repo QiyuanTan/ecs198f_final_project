@@ -37,19 +37,19 @@ class Castling(MoveHandler):
             return False
 
     def handle(self, board, move):
-        if move == "e1g1":
+        if move == "e1g1" or move == "e8h1":
             board[7][4], board[7][7] = "", ""
             board[7][6], board[7][5] = "K", "R"
             self.white_castling_allowed = False
-        elif move == "e1c1":
+        elif move == "e1c1" or move == "e8a1":
             board[7][4], board[7][0] = "", ""
             board[7][2], board[7][3] = "K", "R"
             self.white_castling_allowed = False
-        elif move == "e8g8":
+        elif move == "e8g8" or move == "e8h8":
             board[0][4], board[0][7] = "", ""
             board[0][6], board[0][5] = "k", "r"
             self.back_castling_allowed = False
-        elif move == "e8c8":
+        elif move == "e8c8" or move == "e8a8":
             board[0][4], board[0][0] = "", ""
             board[0][2], board[0][3] = "k", "r"
             self.back_castling_allowed = False
@@ -69,10 +69,10 @@ class EnPassant(MoveHandler):
 
     def applies(self, board, move):
         """ Check if the en passant move is valid. """
-        start, end = move[:2], move[2:]
-        start_col, start_row = ord(start[0]) - ord('a'), 8 - int(start[1])
-        end_col, end_row = ord(end[0]) - ord('a'), 8 - int(end[1])
-        piece = board[start_row][start_col]
+        start, end = move[2:], move[:2]
+        start_col, start_row = str2index(start)
+        end_col, end_row = str2index(end)
+        piece = get_piece(board, start)
 
         # Ensure it's a pawn moving diagonally
         if piece.lower() != "p" or abs(start_col - end_col) != 1 or abs(start_row - end_row) != 1:
@@ -87,7 +87,7 @@ class EnPassant(MoveHandler):
             # Opponent's pawn must have moved two squares forward to be capturable
             if ((last_start_row == (6 if piece == "p" else 1) and
                 last_end_row == (4 if piece == "p" else 3) and
-                last_end_col == end_col) and
+                last_end_row == start_row) and
                 get_piece(board, last_end).upper() == "P"):
 
                 return True
