@@ -115,8 +115,7 @@ def is_diagonal_move(start, end):
 
 def empty_between_horizontal(board, start, end):
     """
-    Function to determine if there are any pieces between the start and end square horizontally,
-    including the ending square
+    Function to determine if there are any pieces between the start and end square horizontally, excluding
     Args:
         board: 2D list representing the chess board
         start: string or tuple of the starting square.
@@ -143,8 +142,7 @@ def empty_between_horizontal(board, start, end):
 
 def empty_between_vertical(board, start, end):
     """
-    Function to determine if there are any pieces between the start and end square vertically,
-    including the ending square
+    Function to determine if there are any pieces between the start and end square vertically, excluding
     Args:
         board: 2D list representing the chess board
         start: string or tuple of the starting square.
@@ -171,8 +169,7 @@ def empty_between_vertical(board, start, end):
 
 def empty_between_diagonal(board, start, end):
     """
-    Function to determine if there are any pieces between the start and end square diagonally,
-    including the ending square
+    Function to determine if there are any pieces between the start and end square diagonally, excluding
     Args:
         board: 2D list representing the chess board
         start: string or tuple of the starting square.
@@ -194,7 +191,7 @@ def empty_between_diagonal(board, start, end):
     col_delta = 1 if start_col < end_col else -1
 
     row, col = start_row + row_delta, start_col + col_delta
-    while row <= end_row and row_delta == 1 or row >= end_row and row_delta == -1:
+    while row < end_row and row_delta == 1 or row > end_row and row_delta == -1:
         if board[row][col] != '':
             return False
         row += row_delta
@@ -301,10 +298,6 @@ def invalid_move_for_piece(board, move, side) -> bool:
     erow, ecol = str2index(move[2:])
 
     if piece == to_self("P"):  # if the piece is a pawn
-
-        if not is_vertical:
-            return True
-
         if is_diagonal:
             if erow == srow + delta and get_piece(board, move[:2]) != '':
                 return False
@@ -315,7 +308,7 @@ def invalid_move_for_piece(board, move, side) -> bool:
             if erow != srow + delta and erow != srow + 2 * delta:  # if ending square is not 1 or 2 spaces above start
                 return True
             else:
-                if empty_between_vertical(board, move[:2], move[2:]):
+                if empty_between_vertical(board, move[:2], move[2:]) and get_piece(board, move[2:]) == '':
                     # make sure nothing is in front of pawn
                     return False
                 else:
@@ -324,7 +317,7 @@ def invalid_move_for_piece(board, move, side) -> bool:
             if erow != srow + delta:  # if ending square is not 1 above
                 return True
             else:
-                if empty_between_vertical(board, move[:2], move[2:]):
+                if empty_between_vertical(board, move[:2], move[2:]) and get_piece(board, move[2:]) == '':
                     # make sure nothing is in front of pawn
                     return False
                 else:
@@ -380,7 +373,7 @@ def invalid_move_for_piece(board, move, side) -> bool:
 
         return True
     elif piece == to_self("Q"):
-        if not (is_horizontal and is_diagonal and is_vertical):
+        if not (is_horizontal or is_diagonal or is_vertical):
             return True
         if is_horizontal:
             if empty_between_horizontal(board, move[:2], move[2:]):

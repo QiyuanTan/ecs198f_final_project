@@ -1,6 +1,6 @@
 import copy
-from logic.board_utils import *
-from logic.special_moves import Castling, EnPassant, Promotion
+from .board_utils import *
+from .special_moves import Castling, EnPassant, Promotion
 
 class ChessLogic:
     def __init__(self):
@@ -169,19 +169,10 @@ class ChessLogic:
         return causes_check or invalid_move
 
     def _handle_move_capture(self, starting, ending):
-        # chess_notation = (f"{get_piece(self.board, starting).lower() if get_piece(self.board, starting).lower() != 'p' else ''}"
-        #                   f"{starting}"
-        #                   f"{'x' if get_piece(self.board, ending) != '' else ''}"
-        #                   f"{ending}")
-        # move_piece(self.board, starting, ending)
-        # return chess_notation
-        
-        piece = get_piece(self.board, starting)
-        piece_symbol = piece.upper() if self.turn == 'w' else piece.lower()
-        if piece.lower() == 'p':
-            piece_symbol = ''
-            
-        chess_notation = f"{piece_symbol}{starting}{'x' if get_piece(self.board, ending) else ''}{ending}"
+        chess_notation = (f"{get_piece(self.board, starting).lower() if get_piece(self.board, starting).lower() != 'p' else ''}"
+                          f"{starting}"
+                          f"{'x' if get_piece(self.board, ending) != '' else ''}"
+                          f"{ending}")
         move_piece(self.board, starting, ending)
         return chess_notation
 

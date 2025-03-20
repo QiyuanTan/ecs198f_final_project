@@ -22,16 +22,16 @@ class Castling(MoveHandler):
         # check if the path is clear
         if move == "e1g1" or move == "e1h1":
             # check for the king side white
-            return empty_between_horizontal(board, "e1", "g1") and not is_square_attacked(board, "g1", "w")
+            return empty_between_horizontal(board, "e1", "h1") and not is_square_attacked(board, "g1", "w")
         elif move == "e1c1" or move == "e1a1":
             # check for the queen side white
-            return empty_between_horizontal(board, "e1", "b1") and not is_square_attacked(board, "c1", "w")
+            return empty_between_horizontal(board, "e1", "a1") and not is_square_attacked(board, "c1", "w")
         elif move == "e8g8" or move == "e8h8":
             # check for the king side black
-            return empty_between_horizontal(board, "e8", "g8") and not is_square_attacked(board, "g8", "b")
+            return empty_between_horizontal(board, "e8", "h8") and not is_square_attacked(board, "g8", "b")
         elif move == "e8c8" or move == "e8a8":
             # check for the queen side black
-            return empty_between_horizontal(board, "e8", "b8") and not is_square_attacked(board, "c8", "b")
+            return empty_between_horizontal(board, "e8", "a8") and not is_square_attacked(board, "c8", "b")
         else:
             # not a valid castling move
             return False
@@ -113,7 +113,8 @@ class EnPassant(MoveHandler):
 
 class Promotion(MoveHandler):
     def applies(self, board, move):
-        return move[1] == "7" and move[3] == "8" and board[1][ord(move[0]) - ord('a')].lower() == "p"
+        return (move[1] == "7" and move[3] == "8" and board[1][ord(move[0]) - ord('a')].lower() == "p") or \
+                (move[1] == "2" and move[3] == "1" and board[6][ord(move[0]) - ord('a')].lower() == "P")
 
     def handle(self, board, move):
         # end_col, end_row = ord(move[2]) - ord('a'), 8 - int(move[3])
