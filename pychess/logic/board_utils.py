@@ -217,56 +217,61 @@ def is_square_attacked(board, square, color):
     opponent_color = "b" if color == "w" else "w"
     row, col = str2index(square)
 
-    # Check for pawn attacks
-    pawn_row_offset = -1 if opponent_color == "w" else 1
-    for pawn_col_offset in [-1, 1]:
-        r, c = row + pawn_row_offset, col + pawn_col_offset
-        if 0 <= r < 8 and 0 <= c < 8 and board[r][c].lower() == 'p' and board[r][c].islower() == (opponent_color == "b"):
-            return True
+    pawn_direction = 1 if opponent_color == "w" else -1 
+    for dc in [-1, 1]:  # 左右两个斜向方向
+        r = row + pawn_direction
+        c = col + dc
+        if 0 <= r < 8 and 0 <= c < 8:
+            piece = board[r][c]
+            if piece.lower() == 'p' and piece.islower() == (opponent_color == "b"):
+                return True
 
-    # Check for knight attacks
-    knight_moves = [(-2, -1), (-2, 1), (2, -1), (2, 1), (-1, -2), (-1, 2), (1, -2), (1, 2)]
+    knight_moves = [(-2, -1), (-2, 1), (2, -1), (2, 1),
+                    (-1, -2), (-1, 2), (1, -2), (1, 2)]
     for dr, dc in knight_moves:
         r, c = row + dr, col + dc
-        if 0 <= r < 8 and 0 <= c < 8 and board[r][c].lower() == 'n' and board[r][c].islower() == (opponent_color == "b"):
-            return True
+        if 0 <= r < 8 and 0 <= c < 8:
+            piece = board[r][c]
+            if piece.lower() == 'n' and piece.islower() == (opponent_color == "b"):
+                return True
 
-    # Check for rook/queen attacks (horizontal/vertical)
-    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-    for dr, dc in directions:
+    for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
         r, c = row, col
-        while 0 <= r < 8 and 0 <= c < 8:
+        while True:
             r += dr
             c += dc
-            if 0 <= r < 8 and 0 <= c < 8:
-                piece = board[r][c]
-                if piece != "":
-                    if (piece.lower() == 'r' or piece.lower() == 'q') and piece.islower() == (opponent_color == "b"):
-                        return True
-                    break  # Blocked by another piece
+            if not (0 <= r < 8 and 0 <= c < 8):
+                break
+            piece = board[r][c]
+            if piece:
+                if (piece.lower() in ['r', 'q']) and (piece.islower() == (opponent_color == "b")):
+                    return True
+                break 
 
-    # Check for bishop/queen attacks (diagonal)
-    directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-    for dr, dc in directions:
+    for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
         r, c = row, col
-        while 0 <= r < 8 and 0 <= c < 8:
+        while True:
             r += dr
             c += dc
+            if not (0 <= r < 8 and 0 <= c < 8):
+                break
+            piece = board[r][c]
+            if piece:
+                if (piece.lower() in ['b', 'q']) and (piece.islower() == (opponent_color == "b")):
+                    return True
+                break 
+
+    for dr in [-1, 0, 1]:
+        for dc in [-1, 0, 1]:
+            if dr == 0 and dc == 0:
+                continue
+            r, c = row + dr, col + dc
             if 0 <= r < 8 and 0 <= c < 8:
                 piece = board[r][c]
-                if piece != "":
-                    if (piece.lower() == 'b' or piece.lower() == 'q') and piece.islower() == (opponent_color == "b"):
-                        return True
-                    break  # Blocked by another piece
+                if piece.lower() == 'k' and piece.islower() == (opponent_color == "b"):
+                    return True
 
-    # Check for king attacks (adjacent squares)
-    king_moves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-    for dr, dc in king_moves:
-        r, c = row + dr, col + dc
-        if 0 <= r < 8 and 0 <= c < 8 and board[r][c].lower() == 'k' and board[r][c].islower() == (opponent_color == "b"):
-            return True
-
-    return False  # Square is not under attack
+    return False
 
 def invalid_move_for_piece(board, move, side) -> bool:
     """

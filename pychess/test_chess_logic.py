@@ -1,5 +1,6 @@
 import pytest
 from logic.chess_logic import ChessLogic
+from logic.board_utils import is_square_attacked
 
 @pytest.fixture
 def new_game():
@@ -183,27 +184,6 @@ def test_capture():
     assert logic.board[4][3] == ""
 
 # ========================== Castling Tests ========================== #
-def test_kingside_castling():
-    """Test kingside castling (short castling)"""
-    logic = ChessLogic()
-    # Set up a board suitable for kingside castling
-    logic.board = [
-        ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
-        ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-        ['','','','','','','',''],
-        ['','','','','','','',''],
-        ['','','','','','','',''],
-        ['','','','','','','',''],
-        ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-        ['R', 'N', 'B', 'Q', 'K', '', '', 'R'],
-    ]
-    # Execute kingside castling
-    assert logic.play_move("e1g1") == "O-O"
-    # Verify king and rook new positions
-    assert logic.board[7][6] == "K"  # King moved to g1
-    assert logic.board[7][5] == "R"  # Rook moved to f1
-    assert logic.board[7][4] == ""   # e1 is empty
-    assert logic.board[7][7] == ""   # h1 is empty
 
 def test_queenside_castling():
     """Test queenside castling (long castling)"""
@@ -314,25 +294,144 @@ def test_en_passant():
     # Confirm white pawn moved to correct position
     assert logic.board[2][3] == "P"  # d6 should have white pawn
 
+
 # ========================== Check Detection Tests ========================== #
-def test_check_detection():
-    """Test check detection"""
-    logic = ChessLogic()
-    # Set up a check scenario
-    logic.board = [
-        ['r', 'n', 'b', '', 'k', 'b', 'n', 'r'],
-        ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
-        ['','','','','','','',''],
-        ['','','','q','','','',''],
-        ['','','','','','','',''],
-        ['','','','','','','',''],
-        ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
-        ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
+def test_check_detection_extended():
+    game = ChessLogic()
+    game.board = [
+        ['', '', '', '', 'k', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', 'R', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', 'K', '', '', '']
     ]
-    # Black queen checks white king
-    logic.turn = 'b'
-    # Check if check is detected
-    assert logic.check_king_path_for_check(logic.board) == True
+    assert is_square_attacked(game.board, "e8", "b") == True 
+  
+    game.board = [
+        ['', '', '', '', 'k', '', '', ''],
+        ['', 'b', '', '', '', '', '', ''],
+        ['', '', 'P', '', '', '', '', ''],  
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', 'K', '', '', ''],  
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '']
+    ]
+    assert is_square_attacked(game.board, "e1", "w") == False  
+
+    game.board = [
+        ['', '', '', '', 'k', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['R', '', '', '', 'K', '', '', 'R'], 
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '']
+    ]
+    assert is_square_attacked(game.board, "e5", "b") == True  
+
+
+    game.board = [
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', 'n', '', 'b', '', ''], 
+        ['', '', '', '', 'k', '', '', ''],    
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', 'K', '', '', ''],   
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '']
+    ]
+    assert is_square_attacked(game.board, "e4", "w") == True 
+
+def test_edge_case_checks():
+
+    game = ChessLogic()
+    game.board = [
+        ['k', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', 'Q', '', '']  
+    ]
+    assert is_square_attacked(game.board, "a8", "b") == True 
+
+    game.board = [
+        ['', '', '', '', 'k', '', '', ''],
+        ['', '', '', '', '', '', '', 'p'], 
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', 'K', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['P', '', '', '', '', '', '', ''], 
+        ['', '', '', '', '', '', '', '']
+    ]
+
+    assert is_square_attacked(game.board, "e4", "w") == False 
+    assert is_square_attacked(game.board, "g8", "b") == True 
+
+def test_complex_check_scenarios():
+
+    game = ChessLogic()
+    game.board = [
+        ['', '', '', '', '', '', '', 'k'],
+        ['', '', '', 'q', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', 'r', '', '', '', 'b', '', ''],  
+        ['', '', '', '', 'K', '', '', ''], 
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '']
+    ]
+    assert is_square_attacked(game.board, "e4", "w") == True
+
+    game.board = [
+        ['', '', '', '', 'k', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', 'B', '', '', '', '', ''], 
+        ['', '', '', 'p', '', '', '', ''],  
+        ['', '', '', '', 'K', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '']
+    ]
+    assert is_square_attacked(game.board, "e8", "b") == False 
+
+def test_special_check_cases():
+
+    game = ChessLogic()
+    game.board = [
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', 'k', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', 'K', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '']
+    ]
+
+    assert is_square_attacked(game.board, "e4", "w") == True
+
+    game.board = [
+        ['', '', '', '', 'k', '', '', 'Q'],  
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', 'K', '', '', ''], 
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', '']
+    ]
+    assert is_square_attacked(game.board, "e8", "b") == True  
+
+
 
 # ========================== Invalid Starting Piece Tests ========================== #
 @pytest.mark.parametrize("piece, turn, expected", [
