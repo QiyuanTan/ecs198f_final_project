@@ -22,16 +22,16 @@ class Castling(MoveHandler):
         # check if the path is clear
         if move == "e1g1" or move == "e1h1":
             # check for the king side white
-            return empty_between_horizontal(board, "e1", "g1") and not is_square_attacked(board, "g1", "w")
+            return empty_between_horizontal(board, "e1", "h1") and not is_square_attacked(board, "g1", "w")
         elif move == "e1c1" or move == "e1a1":
             # check for the queen side white
-            return empty_between_horizontal(board, "e1", "b1") and not is_square_attacked(board, "c1", "w")
+            return empty_between_horizontal(board, "e1", "a1") and not is_square_attacked(board, "c1", "w")
         elif move == "e8g8" or move == "e8h8":
             # check for the king side black
-            return empty_between_horizontal(board, "e8", "g8") and not is_square_attacked(board, "g8", "b")
+            return empty_between_horizontal(board, "e8", "h8") and not is_square_attacked(board, "g8", "b")
         elif move == "e8c8" or move == "e8a8":
             # check for the queen side black
-            return empty_between_horizontal(board, "e8", "b8") and not is_square_attacked(board, "c8", "b")
+            return empty_between_horizontal(board, "e8", "a8") and not is_square_attacked(board, "c8", "b")
         else:
             # not a valid castling move
             return False
@@ -40,19 +40,19 @@ class Castling(MoveHandler):
         if move == "e1g1":
             board[7][4], board[7][7] = "", ""
             board[7][6], board[7][5] = "K", "R"
-            self.white_castling_allowed = True
+            self.white_castling_allowed = False
         elif move == "e1c1":
             board[7][4], board[7][0] = "", ""
             board[7][2], board[7][3] = "K", "R"
-            self.white_castling_allowed = True
+            self.white_castling_allowed = False
         elif move == "e8g8":
             board[0][4], board[0][7] = "", ""
             board[0][6], board[0][5] = "k", "r"
-            self.back_castling_allowed = True
+            self.back_castling_allowed = False
         elif move == "e8c8":
             board[0][4], board[0][0] = "", ""
             board[0][2], board[0][3] = "k", "r"
-            self.back_castling_allowed = True
+            self.back_castling_allowed = False
         return "O-O" if "g" in move else "O-O-O"
 
     def update(self, move):
@@ -85,10 +85,10 @@ class EnPassant(MoveHandler):
             last_end_col, last_end_row = ord(last_end[0]) - ord('a'), 8 - int(last_end[1])
 
             # Opponent's pawn must have moved two squares forward to be capturable
-            if (last_start_row == (6 if piece == "p" else 1) and 
-                last_end_row == (4 if piece == "p" else 3) and 
-                last_start_col == last_end_col and 
-                last_end_col == end_col):
+            if ((last_start_row == (6 if piece == "p" else 1) and
+                last_end_row == (4 if piece == "p" else 3) and
+                last_end_col == end_col) and
+                get_piece(board, last_end).upper() == "P"):
 
                 return True
 
@@ -113,7 +113,8 @@ class EnPassant(MoveHandler):
 
 class Promotion(MoveHandler):
     def applies(self, board, move):
-        return move[1] == "7" and move[3] == "8" and board[1][ord(move[0]) - ord('a')].lower() == "p"
+        return (move[1] == "7" and move[3] == "8" and board[1][ord(move[0]) - ord('a')].lower() == "p") or \
+                (move[1] == "2" and move[3] == "1" and board[6][ord(move[0]) - ord('a')].lower() == "P")
 
     def handle(self, board, move):
         # end_col, end_row = ord(move[2]) - ord('a'), 8 - int(move[3])

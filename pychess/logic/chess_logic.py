@@ -1,6 +1,6 @@
 import copy
-from logic.board_utils import *
-from logic.special_moves import Castling, EnPassant, Promotion
+from .board_utils import *
+from .special_moves import Castling, EnPassant, Promotion
 
 class ChessLogic:
     def __init__(self):
@@ -58,6 +58,9 @@ class ChessLogic:
         starting_piece = get_piece(self.board, starting)
         ending_piece = get_piece(self.board, ending)
 
+        print(f'{self.turn}\'s turn')
+        print(self.en_passant.last_move)
+
         # skip if the starting piece is invalid
         if self._invalid_starting_piece(starting_piece):
             print("Invalid starting square")
@@ -69,7 +72,7 @@ class ChessLogic:
             result = self.castling.handle(self.board, move)
         elif self.en_passant.applies(self.board, move):
             print("en passant")
-            return self.en_passant.handle(self.board, move)
+            result =  self.en_passant.handle(self.board, move)
         else:
             # handle normal moves
             if self._invalid_move(move):
@@ -91,12 +94,12 @@ class ChessLogic:
             self.castling.white_castling_allowed = False
         self.en_passant.last_move = move
 
+        # switch the move
+        self.turn = 'w' if self.turn == 'b' else 'b'
+
         if self.promotion.applies(self.board, move):
             print("promotion")
             return self.promotion.handle(self.board, move)
-
-        # switch the move
-        self.turn = 'w' if self.turn == 'b' else 'b'
 
         # determine if the game is over
         self.result = self._game_over()
@@ -124,7 +127,8 @@ class ChessLogic:
         """
         board = copy.deepcopy(self.board)
         move_piece(board, move[:2], move[2:])
-        return is_square_attacked(board, self.white_king_index if side == 'w' else self.black_king_index, side)
+        king_index = self.white_king_index if side == 'w' else self.black_king_index
+        return is_square_attacked(board, king_index if not get_piece(board, move[2:]).lower() == 'k' else move[2:], side)
 
     def _invalid_move(self, move) -> bool:
         """
@@ -169,23 +173,14 @@ class ChessLogic:
         return causes_check or invalid_move
 
     def _handle_move_capture(self, starting, ending):
-        # chess_notation = (f"{get_piece(self.board, starting).lower() if get_piece(self.board, starting).lower() != 'p' else ''}"
-        #                   f"{starting}"
-        #                   f"{'x' if get_piece(self.board, ending) != '' else ''}"
-        #                   f"{ending}")
-        # move_piece(self.board, starting, ending)
-        # return chess_notation
-        
-        piece = get_piece(self.board, starting)
-        piece_symbol = piece.upper() if self.turn == 'w' else piece.lower()
-        if piece.lower() == 'p':
-            piece_symbol = ''
-            
-        chess_notation = f"{piece_symbol}{starting}{'x' if get_piece(self.board, ending) else ''}{ending}"
+        chess_notation = (f"{get_piece(self.board, starting).lower() if get_piece(self.board, starting).lower() != 'p' else ''}"
+                          f"{starting}"
+                          f"{'x' if get_piece(self.board, ending) != '' else ''}"
+                          f"{ending}")
         move_piece(self.board, starting, ending)
         return chess_notation
 
-    def white_king_checked(self, board) -> bool:
+    def white_king_checked(self, board, white_king_index) -> bool:
         """
             Function to check if Black King is in check
             Args:
@@ -194,13 +189,13 @@ class ChessLogic:
                 True or False if king is in check
         """
         # Convert the numeric coordinates to chess notation
-        row = str(8 - self.white_king_index[0])
-        col = chr(ord('a') + self.white_king_index[1])
+        row = str(8 - white_king_index[0])
+        col = chr(ord('a') + white_king_index[1])
         square = col + row
         print(f"White king is at square: {square}")
         return is_square_attacked(board, square, "w")
 
-    def black_king_checked(self, board) -> bool:
+    def black_king_checked(self, board, black_king_index) -> bool:
         """
             Function to check if Black King is in check
             Args:
@@ -209,8 +204,8 @@ class ChessLogic:
                 True or False if king is in check
         """
         # Convert the numeric coordinates to chess notation
-        row = str(8 - self.black_king_index[0])
-        col = chr(ord('a') + self.black_king_index[1])
+        row = str(8 - black_king_index[0])
+        col = chr(ord('a') + black_king_index[1])
         square = col + row
         print(f"Black king is at square: {square}")
         return is_square_attacked(board, square, "b")
@@ -230,7 +225,7 @@ class ChessLogic:
 
                 '' - Game In Progress
         """
-        is_king_checked = self.white_king_checked(self.board) if self.turn == 'w' else self.black_king_checked(self.board)
+        is_king_checked = self.white_king_checked(self.board, self.white_king_index) if self.turn == 'w' else self.black_king_checked(self.board, self.black_king_index)
         no_valid_moves = self._no_valid_moves(self.turn)
         print(f'{self.turn}: is_king_checked: {is_king_checked}, no_valid_moves: {no_valid_moves}')
         if is_king_checked and no_valid_moves:
@@ -272,6 +267,14 @@ class ChessLogic:
 
                 for move in move_set:
                     if not self.invalid_move(self.board, index2str((i, j)) + index2str(move), side):
+                        print(f'valid move: {index2str((i, j)) + index2str(move)}')
                         return False
+
+        if side == 'w':
+            if self.castling.applies(self.board, "e1g1") or self.castling.applies(self.board, "e1c1"):
+                return False
+        elif side == 'b':
+            if self.castling.applies(self.board, "e8g8") or self.castling.applies(self.board, "e8c8"):
+                return False
 
         return True
