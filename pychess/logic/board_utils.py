@@ -299,7 +299,7 @@ def invalid_move_for_piece(board, move, side) -> bool:
 
     if piece == to_self("P"):  # if the piece is a pawn
         if is_diagonal:
-            if erow == srow + delta and get_piece(board, move[:2]) != '':
+            if erow == srow + delta and get_piece(board, move[2:]) != '':
                 return False
             else:
                 return True
@@ -389,52 +389,10 @@ def invalid_move_for_piece(board, move, side) -> bool:
 
         return True
     else:
-        if not (is_horizontal and is_diagonal and is_vertical):
+        if not (is_horizontal or is_diagonal or is_vertical):
             return True
 
-        if is_vertical:
-
-            if erow != srow + 1 or erow != srow - 1:  # if ending square is not 1 vertical
-                return True
-            else:
-                if empty_between_vertical(board, move[:2], move[2:]):
-                    # make sure nothing is in front of pawn
-                    return False
-                else:
-                    return True
-
-        if is_horizontal:
-
-            if ecol != scol + 1 or ecol != scol - 1:  # if ending square is not 1 horizontal
-                return True
-            else:
-                if empty_between_horizontal(board, move[:2], move[2:]):
-                    # make sure nothing is in front of pawn
-                    return False
-                else:
-                    return True
-        if is_diagonal:
-
-            if ecol == scol + 1 and erow != erow - 1:  # bottom right
-                if empty_between_diagonal(board, move[:2], move[2:]):
-                    # make sure nothing is in front of pawn
-                    return False
-
-            if ecol == scol - 1 and erow != erow - 1:  # bottom left
-                if empty_between_diagonal(board, move[:2], move[2:]):
-                    # make sure nothing is in front of pawn
-                    return False
-
-            if ecol == scol + 1 and erow != erow - 1:  # top left
-                if empty_between_diagonal(board, move[:2], move[2:]):
-                    # make sure nothing is in front of pawn
-                    return False
-            if ecol == scol + 1 and erow != erow + 1:  # top right
-                if empty_between_diagonal(board, move[:2], move[2:]):
-                    # make sure nothing is in front of pawn
-                    return False
-
-            return True
+        return not abs(ecol - scol)**2 + abs(erow - srow)**2 <= 2
 
     raise ValueError("Move not handled")
 
@@ -485,10 +443,8 @@ def rook_moves(board, i, j, side) -> list[tuple[int, int]]:
                 break
             if board[new_i][new_j] == '':
                 moves.append((new_i, new_j))
-            elif board[new_i][new_j].isupper() != side.isupper():
-                moves.append((new_i, new_j))
-                break
             else:
+                moves.append((new_i, new_j))
                 break
     return moves
 
@@ -532,10 +488,8 @@ def bishop_moves(board, i, j, side) -> list[tuple[int, int]]:
                 break
             if board[new_i][new_j] == '':
                 moves.append((new_i, new_j))
-            elif board[new_i][new_j].isupper() != side.isupper():
-                moves.append((new_i, new_j))
-                break
             else:
+                moves.append((new_i, new_j))
                 break
     return moves
 
@@ -569,6 +523,5 @@ def king_moves(board, i, j, side) -> list[tuple[int, int]]:
         new_i = i + direction[0]
         new_j = j + direction[1]
         if 0 <= new_i < 8 and 0 <= new_j < 8:
-            if board[new_i][new_j] == '' or board[new_i][new_j].isupper() != side.isupper():
-                moves.append((new_i, new_j))
+            moves.append((new_i, new_j))
     return moves

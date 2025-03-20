@@ -124,7 +124,8 @@ class ChessLogic:
         """
         board = copy.deepcopy(self.board)
         move_piece(board, move[:2], move[2:])
-        return is_square_attacked(board, self.white_king_index if side == 'w' else self.black_king_index, side)
+        king_index = self.white_king_index if side == 'w' else self.black_king_index
+        return is_square_attacked(board, king_index if not move[2:].lower() == 'k' else move[2:], side)
 
     def _invalid_move(self, move) -> bool:
         """
@@ -176,7 +177,7 @@ class ChessLogic:
         move_piece(self.board, starting, ending)
         return chess_notation
 
-    def white_king_checked(self, board) -> bool:
+    def white_king_checked(self, board, white_king_index) -> bool:
         """
             Function to check if Black King is in check
             Args:
@@ -185,13 +186,13 @@ class ChessLogic:
                 True or False if king is in check
         """
         # Convert the numeric coordinates to chess notation
-        row = str(8 - self.white_king_index[0])
-        col = chr(ord('a') + self.white_king_index[1])
+        row = str(8 - white_king_index[0])
+        col = chr(ord('a') + white_king_index[1])
         square = col + row
         print(f"White king is at square: {square}")
         return is_square_attacked(board, square, "w")
 
-    def black_king_checked(self, board) -> bool:
+    def black_king_checked(self, board, black_king_index) -> bool:
         """
             Function to check if Black King is in check
             Args:
@@ -200,8 +201,8 @@ class ChessLogic:
                 True or False if king is in check
         """
         # Convert the numeric coordinates to chess notation
-        row = str(8 - self.black_king_index[0])
-        col = chr(ord('a') + self.black_king_index[1])
+        row = str(8 - black_king_index[0])
+        col = chr(ord('a') + black_king_index[1])
         square = col + row
         print(f"Black king is at square: {square}")
         return is_square_attacked(board, square, "b")
@@ -221,7 +222,7 @@ class ChessLogic:
 
                 '' - Game In Progress
         """
-        is_king_checked = self.white_king_checked(self.board) if self.turn == 'w' else self.black_king_checked(self.board)
+        is_king_checked = self.white_king_checked(self.board, self.white_king_index) if self.turn == 'w' else self.black_king_checked(self.board, self.black_king_index)
         no_valid_moves = self._no_valid_moves(self.turn)
         print(f'{self.turn}: is_king_checked: {is_king_checked}, no_valid_moves: {no_valid_moves}')
         if is_king_checked and no_valid_moves:
@@ -264,5 +265,12 @@ class ChessLogic:
                 for move in move_set:
                     if not self.invalid_move(self.board, index2str((i, j)) + index2str(move), side):
                         return False
+
+        if side == 'w':
+            if self.castling.applies(self.board, "e1g1") or self.castling.applies(self.board, "e1c1"):
+                return False
+        elif side == 'b':
+            if self.castling.applies(self.board, "e8g8") or self.castling.applies(self.board, "e8c8"):
+                return False
 
         return True
