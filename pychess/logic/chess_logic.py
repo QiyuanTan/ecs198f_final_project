@@ -128,7 +128,7 @@ class ChessLogic:
         board = copy.deepcopy(self.board)
         move_piece(board, move[:2], move[2:])
         king_index = self.white_king_index if side == 'w' else self.black_king_index
-        return is_square_attacked(board, king_index if not move[2:].lower() == 'k' else move[2:], side)
+        return is_square_attacked(board, king_index if not get_piece(board, move[2:]).lower() == 'k' else move[2:], side)
 
     def _invalid_move(self, move) -> bool:
         """
@@ -267,6 +267,7 @@ class ChessLogic:
 
                 for move in move_set:
                     if not self.invalid_move(self.board, index2str((i, j)) + index2str(move), side):
+                        print(f'valid move: {index2str((i, j)) + index2str(move)}')
                         return False
 
         if side == 'w':

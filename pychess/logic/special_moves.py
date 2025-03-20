@@ -40,19 +40,19 @@ class Castling(MoveHandler):
         if move == "e1g1":
             board[7][4], board[7][7] = "", ""
             board[7][6], board[7][5] = "K", "R"
-            self.white_castling_allowed = True
+            self.white_castling_allowed = False
         elif move == "e1c1":
             board[7][4], board[7][0] = "", ""
             board[7][2], board[7][3] = "K", "R"
-            self.white_castling_allowed = True
+            self.white_castling_allowed = False
         elif move == "e8g8":
             board[0][4], board[0][7] = "", ""
             board[0][6], board[0][5] = "k", "r"
-            self.back_castling_allowed = True
+            self.back_castling_allowed = False
         elif move == "e8c8":
             board[0][4], board[0][0] = "", ""
             board[0][2], board[0][3] = "k", "r"
-            self.back_castling_allowed = True
+            self.back_castling_allowed = False
         return "O-O" if "g" in move else "O-O-O"
 
     def update(self, move):
