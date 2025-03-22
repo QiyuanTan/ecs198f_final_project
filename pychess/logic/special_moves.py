@@ -53,7 +53,7 @@ class Castling(MoveHandler):
             board[0][4], board[0][0] = "", ""
             board[0][2], board[0][3] = "k", "r"
             self.back_castling_allowed = False
-        return "O-O" if "g" in move else "O-O-O"
+        return "0-0" if "g" in move else "0-0-0"
 
     def update(self, move):
         if move[2:] == "e1" or move[2:] == "a1" or move[:2] == "h8":
