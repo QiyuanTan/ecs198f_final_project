@@ -119,4 +119,4 @@ class Promotion(MoveHandler):
     def handle(self, board, move):
         end_col, end_row = ord(move[2]) - ord('a'), 8 - int(move[3])
         board[end_row][end_col] = "Q" if board[end_row][end_col].isupper() else "q"
-        return f"{move}=Q"
+        return f"=Q"
