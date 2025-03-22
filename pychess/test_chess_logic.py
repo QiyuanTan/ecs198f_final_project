@@ -10,9 +10,9 @@ def new_game():
 # ========================== Basic Move Tests ========================== #
 @pytest.mark.parametrize("move, expected", [
     ("e2e4", "e2e4"),  
-    ("g1f3", "Ng1f3"),  
-    ("f1c4", "Bf1c4"),
-    ("a1a3", "Ra1a3"), 
+    ("g1f3", "ng1f3"),  
+    ("f1c4", "bf1c4"),
+    ("a1a3", "ra1a3"), 
 ])
 def test_valid_moves(new_game, move, expected):
     if move == "f1c4":
@@ -68,7 +68,7 @@ def test_invalid_moves(new_game, move):
 ])
 def test_invalid_move_method(new_game, move, expected):
     """Test the _invalid_move method"""
-    assert new_game._invalid_move(move) == expected
+    assert new_game._invalid_starting_piece(move) == expected
 
 # ========================== Specific Piece Invalid Move Tests ========================== #
 def test_pawn_invalid_moves():

@@ -58,28 +58,28 @@ class ChessLogic:
         starting_piece = get_piece(self.board, starting)
         ending_piece = get_piece(self.board, ending)
 
-        print(f'{self.turn}\'s turn')
-        print(self.en_passant.last_move)
+        # print(f'{self.turn}\'s turn')
+        # print(self.en_passant.last_move)
 
         # skip if the starting piece is invalid
         if self._invalid_starting_piece(starting_piece):
-            print("Invalid starting square")
+            #print("Invalid starting square")
             return ""
 
         # handle special moves
         if self.castling.applies(self.board, move):
-            print("castling")
+            #print("castling")
             result = self.castling.handle(self.board, move)
         elif self.en_passant.applies(self.board, move):
-            print("en passant")
+            #print("en passant")
             result =  self.en_passant.handle(self.board, move)
         else:
             # handle normal moves
             if self._invalid_move(move):
-                print("Invalid move")
+                #print("Invalid move")
                 return ""
             # move the piece
-            print("normal move")
+            #print("normal move")
             result = self._handle_move_capture(starting, ending)
 
         if starting_piece == 'k':
@@ -98,13 +98,13 @@ class ChessLogic:
         self.turn = 'w' if self.turn == 'b' else 'b'
 
         if self.promotion.applies(self.board, move):
-            print("promotion")
+            #print("promotion")
             result =  self.promotion.handle(self.board, move)
 
         # determine if the game is over
         self.result = self._game_over()
 
-        print(result)
+        # print(result)
         return result
 
     def _invalid_starting_piece(self, starting_piece):
@@ -113,8 +113,10 @@ class ChessLogic:
         @param starting_piece: The piece at the starting square
         @return: True if the starting piece is invalid, False otherwise
         """
-        return starting_piece == '' or (self.turn == 'w' and starting_piece.islower()) or (
+        val = starting_piece == '' or (self.turn == 'w' and starting_piece.islower()) or (
                     self.turn == 'b' and starting_piece.isupper())
+        # print(f"val {val}")
+        return val
 
     def move_causes_check(self, move, side):
         """
@@ -156,19 +158,26 @@ class ChessLogic:
         if self.castling.applies(board, move) or self.en_passant.applies(board, move):
             return False
 
-        # check to make sure you're not moving on top of another white piece
+        # Add debug prints
+        print(f"Checking move: {move}")
+        print(f"Side to move: {side}")
+        start_piece = get_piece(board, move[:2])
+        print(f"Moving piece: {start_piece}")
         dest_piece = get_piece(board, move[2:])
-        if is_self(dest_piece):
+        print(f"Destination piece: {dest_piece}")
+        print(f"Is self piece check: {is_self(dest_piece) if dest_piece else False}")
+
+        if dest_piece and is_self(dest_piece):
             print("moving on top of another piece")
             return True
 
         causes_check = self.move_causes_check(move, side)
         invalid_move = invalid_move_for_piece(board, move, side)
 
-        if causes_check:
-            print("causes check")
-        if invalid_move:
-            print("invalid move for piece")
+        # if causes_check:
+        #     print("causes check")
+        # if invalid_move:
+        #     print("invalid move for piece")
 
         return causes_check or invalid_move
 
@@ -227,7 +236,7 @@ class ChessLogic:
         """
         is_king_checked = self.white_king_checked(self.board, self.white_king_index) if self.turn == 'w' else self.black_king_checked(self.board, self.black_king_index)
         no_valid_moves = self._no_valid_moves(self.turn)
-        print(f'{self.turn}: is_king_checked: {is_king_checked}, no_valid_moves: {no_valid_moves}')
+        #print(f'{self.turn}: is_king_checked: {is_king_checked}, no_valid_moves: {no_valid_moves}')
         if is_king_checked and no_valid_moves:
             return 'w' if self.turn == 'b' else 'b'
         elif (not is_king_checked) and no_valid_moves:
@@ -250,6 +259,7 @@ class ChessLogic:
                     continue
 
                 piece = piece.lower()
+                print(f"Piece: {piece}")
                 if piece == 'p':
                     move_set = pawn_moves(self.board, i, j, side)
                 elif piece == 'r':
@@ -266,8 +276,9 @@ class ChessLogic:
                     raise Exception("Unhandled piece")
 
                 for move in move_set:
+                    print(f"Checking move: {index2str((i, j)) + index2str(move)}")
                     if not self.invalid_move(self.board, index2str((i, j)) + index2str(move), side):
-                        print(f'valid move: {index2str((i, j)) + index2str(move)}')
+                        #print(f'valid move: {index2str((i, j)) + index2str(move)}')
                         return False
 
         if side == 'w':
